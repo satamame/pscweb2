@@ -1,0 +1,6 @@
+__pycache__
+*.lnk
+/.venv/
+/docs_dev/
+.vscode/
+/pscweb2/local_settings.py
