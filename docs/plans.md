@@ -1,6 +1,6 @@
-# pscweb2 plans
+# Plans
 
-## Features to implement
+## Features to be implemented
 
 - `Admin user` が、`production` (公演) と、その `owner` (管理者) アカウントを作ることができる。
 - `Production owner` が、その `production` の `editor` (編集者) アカウントと、`reader` (読者) アカウントを作ることができる。
