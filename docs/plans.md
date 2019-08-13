@@ -2,8 +2,9 @@
 
 ## Features to be implemented
 
-- `Admin user` が、`production` (公演) と、その `owner` (管理者) アカウントを作ることができる。
-- `Production owner` が、その `production` の `editor` (編集者) アカウントと、`reader` (読者) アカウントを作ることができる。
+- `Admin user` が、`production` (公演) を作ることができる。
+- `Admin user` が、`production` の `owner` (所有者) を指定することができる。
+- `Production owner` が、その `production` の `editor` (編集者)、`reader` (読者) を指定することができる。
 - `Production owner` が、以下のデータをアップロードできる。
     - キャスト表
         - 違う役者が同じ役をやる場合、役名に番号をつける等して分けること。
@@ -19,3 +20,14 @@
         - 同じ日、同じ稽古場でも、休憩をはさむ場合はスロットを分けるとよい。
         - 稽古場にいられる時間を書くこと。複数ある場合は、"," で区切る。
         - フル参加なら "*"、フル NG なら "!" など、記号を決めておく。
+
+## Apps to be added
+- **production**
+    - 複数の公演を管理する。
+    - 公演ごとに、owner, editor, reader を管理する。
+
+## ToDo
+- サインアップ機能
+    - 最初は、自由にサインアップできるようにはしない。
+- メール送信機能
+    - サインアップ機能を作るなら必要。

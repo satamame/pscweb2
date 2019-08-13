@@ -8,6 +8,8 @@ verify_ssl = true
 [packages]
 django = "*"
 mysqlclient = "==1.4.2.post1"
+gunicorn = "*"
+django-heroku = "*"
 
 [requires]
 python_version = "3.6"
