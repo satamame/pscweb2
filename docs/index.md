@@ -2,7 +2,7 @@
 
 ## Repository
 
-- https://github.com/satamame/pscweb2
+- [https://github.com/satamame/pscweb2](https://github.com/satamame/pscweb2)
 
 ## Overview
 

@@ -1,5 +1,6 @@
 __pycache__
 *.lnk
+*.url
 /.venv/
 /docs_dev/
 .vscode/

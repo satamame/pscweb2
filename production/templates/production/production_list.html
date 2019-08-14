@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<h1>公演一覧</h1>
+<div align="right"><a href="{% url 'production:prod_create' %}">新規作成</a></div>
+<ul>
+    {% for item in object_list %}
+    <li>{{ item }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}
