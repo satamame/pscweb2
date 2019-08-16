@@ -680,17 +680,17 @@ div.breadcrumbs ul li:first-child::before {
 
 .addlink {
     padding-left: 16px;
-    background: url(../img/icon-addlink.svg) 0 1px no-repeat;
+    background: url(../img/icon-addlink.svg) 0 center no-repeat;
 }
 
 .changelink, .inlinechangelink {
     padding-left: 16px;
-    background: url(../img/icon-changelink.svg) 0 1px no-repeat;
+    background: url(../img/icon-changelink.svg) 0 center no-repeat;
 }
 
 .deletelink {
     padding-left: 16px;
-    background: url(../img/icon-deletelink.svg) 0 1px no-repeat;
+    background: url(../img/icon-deletelink.svg) 0 center no-repeat;
 }
 
 a.deletelink:link, a.deletelink:visited {
