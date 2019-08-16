@@ -31,11 +31,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'account.apps.AccountConfig',
+    'accounts.apps.AccountsConfig',
     'production.apps.ProductionConfig',
 ]
 
-AUTH_USER_MODEL = 'account.User'
+AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
