@@ -21,10 +21,12 @@
         - 稽古場にいられる時間を書くこと。複数ある場合は、"," で区切る。
         - フル参加なら "*"、フル NG なら "!" など、記号を決めておく。
 
-## Apps to be added
-- **production**
+## Apps
+- **production** (added)
     - 複数の公演を管理する。
     - 公演ごとに、owner, editor, reader を管理する。
+- **rehearsal** (to be added)
+    - 稽古スケジュールを管理する。
 
 ## ToDo
 - サインアップ機能
