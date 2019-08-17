@@ -9,7 +9,21 @@ class ProdUserAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'prod_id', 'user_id', 'is_owner', 'is_editor')
     list_filter = ('prod_id',)
     form = ProdUserAdminForm
+    
+    # fields は Form の Meta でも定義しているが、表示順を維持するため
+    fields = ('prod_id', 'user_id', 'is_owner', 'is_editor')
 
+    def add_view(self,request,extra_content=None):
+        '''追加フォームでは全 field が変更できる
+        '''
+        self.readonly_fields = ()
+        return super(ProdUserAdmin,self).add_view(request)
+
+    def change_view(self,request,object_id,extra_content=None):
+        '''変更フォームでは公演とユーザは変更できない
+        '''
+        self.readonly_fields = ('prod_id','user_id')
+        return super(ProdUserAdmin, self).change_view(request, object_id)
 
 admin.site.register(Production)
 admin.site.register(ProdUser, ProdUserAdmin)
