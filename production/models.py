@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 
+
 class Production(models.Model):
     name = models.CharField('公演名', max_length=50)
 
@@ -12,6 +13,8 @@ class Production(models.Model):
 
 
 class ProdUser(models.Model):
+    '''公演ごとのユーザと権限
+    '''
     prod_id = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL,
