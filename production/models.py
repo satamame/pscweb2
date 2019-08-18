@@ -15,9 +15,9 @@ class Production(models.Model):
 class ProdUser(models.Model):
     '''公演ごとのユーザと権限
     '''
-    prod_id = models.ForeignKey(Production, verbose_name='公演',
+    production = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
-    user_id = models.ForeignKey(settings.AUTH_USER_MODEL,
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
         verbose_name='ユーザ', on_delete=models.CASCADE)
     is_owner = models.BooleanField('所有権', default=False)
     is_editor = models.BooleanField('編集権', default=False)
@@ -26,4 +26,4 @@ class ProdUser(models.Model):
         verbose_name = verbose_name_plural = "公演ユーザ"
         
     def __str__(self):
-        return '{}@{}'.format(self.user_id, self.prod_id)
+        return '{}@{}'.format(self.user, self.production)

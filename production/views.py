@@ -3,14 +3,21 @@ from django.views.generic import ListView
 from django.views.generic.edit import CreateView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from production.models import Production
+from django.contrib.auth.mixins import LoginRequiredMixin
+from production.models import Production, ProdUser
 
-class ProdList(ListView):
+class ProdList(LoginRequiredMixin, ListView):
 
     model = Production
 
+    def get_queryset(self):
+        '''リストに表示するレコードをフィルタする
+        '''
+        prod_users = ProdUser.objects.filter(user=self.request.user)
+        return Production.objects.filter(
+            id__in=[u.production.id for u in prod_users])
 
-class ProdCreate(CreateView):
+class ProdCreate(LoginRequiredMixin, CreateView):
 
     model = Production
     fields = ("name", )

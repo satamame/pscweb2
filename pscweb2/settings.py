@@ -48,6 +48,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'pscweb2.urls'
+LOGIN_REDIRECT_URL = '/'
 
 TEMPLATES = [
     {

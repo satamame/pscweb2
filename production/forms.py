@@ -7,24 +7,24 @@ class ProdUserAdminForm(forms.ModelForm):
     '''
     class Meta:
         model = ProdUser
-        fields = ('prod_id', 'user_id', 'is_owner', 'is_editor')
+        fields = ('production', 'user', 'is_owner', 'is_editor')
 
-    def clean_user_id(self):
+    def clean_user(self):
         '''ユーザのバリデーション
         '''
-        # user_id を検証しているという事は、追加フォームである
-        user_id = self.cleaned_data['user_id']
+        # user を検証しているという事は、追加フォームである
+        user = self.cleaned_data['user']
         
         # prod_id が入力されていなければ、そっちの検証に任せる
-        if 'prod_id' not in self.cleaned_data:
-            return user_id
+        if 'production' not in self.cleaned_data:
+            return user
         
-        # 同じ prod_id, user_id のレコードがあるか検索
-        prod_id = self.cleaned_data['prod_id']
-        dupe = ProdUser.objects.filter(prod_id=prod_id, user_id=user_id)
+        # 同じ production, user のレコードがあるか検索
+        production = self.cleaned_data['production']
+        dupe = ProdUser.objects.filter(production=production, user=user)
         
-        # 追加なので、同じ prod_id, user_id のレコードが見つかったら重複
+        # 追加なので、同じ production, user のレコードが見つかったら重複
         if len(dupe) > 0:
             raise forms.ValidationError("{} はすでに {} のユーザです。"
-                .format(user_id, prod_id))
-        return user_id
+                .format(user, production))
+        return user
