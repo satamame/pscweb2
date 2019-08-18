@@ -12,13 +12,18 @@ class ProdUserAdminForm(forms.ModelForm):
     def clean_user_id(self):
         '''ユーザのバリデーション
         '''
-        
-        # これらの値は、追加の時しか取れない (変更の時は readonly)
-        prod_id = self.cleaned_data['prod_id']
+        # user_id を検証しているという事は、追加フォームである
         user_id = self.cleaned_data['user_id']
+        
+        # prod_id が入力されていなければ、そっちの検証に任せる
+        if 'prod_id' not in self.cleaned_data:
+            return user_id
+        
+        # 同じ prod_id, user_id のレコードがあるか検索
+        prod_id = self.cleaned_data['prod_id']
         dupe = ProdUser.objects.filter(prod_id=prod_id, user_id=user_id)
         
-        # 追加の時、同じ prod_id と user_id のユーザが見つかったら重複
+        # 追加なので、同じ prod_id, user_id のレコードが見つかったら重複
         if len(dupe) > 0:
             raise forms.ValidationError("{} はすでに {} のユーザです。"
                 .format(user_id, prod_id))
