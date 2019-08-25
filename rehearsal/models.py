@@ -9,8 +9,8 @@ class Facility(models.Model):
     production = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
     name = models.CharField('名前', max_length=50)
-    url = models.URLField('リンク')
-    note = models.TextField('メモ')
+    url = models.URLField('リンク', blank=True)
+    note = models.TextField('メモ', blank=True)
     
     class Meta:
         verbose_name = verbose_name_plural = '稽古場の施設'
@@ -25,7 +25,7 @@ class Place(models.Model):
     facility = models.ForeignKey(Facility, verbose_name='施設',
         on_delete=models.CASCADE)
     room_name = models.CharField('部屋名', max_length=50)
-    note = models.TextField('メモ')
+    note = models.TextField('メモ', blank=True)
     
     class Meta:
         verbose_name = verbose_name_plural = '稽古場'
@@ -45,14 +45,14 @@ class Rehearsal(models.Model):
     date = models.DateField('日付')
     start_time = models.TimeField('開始')
     end_time = models.TimeField('終了')
-    note = models.TextField('メモ')
+    note = models.TextField('メモ', blank=True)
     
     class Meta:
         verbose_name = verbose_name_plural = '稽古のコマ'
     
     def __str__(self):
-        # ex. 'City hall,Studio #1,08/30'
-        return '{},{}'.format(self.place, self.date.strftime('%m/%d'))
+        # ex. '08/30,City hall,Studio #1'
+        return '{},{}'.format(self.date.strftime('%m/%d'), self.place)
 
 
 class Scene(models.Model):
@@ -69,7 +69,7 @@ class Scene(models.Model):
     length_auto = models.BooleanField('長さを自動で決める', default=True)
     progress = models.IntegerField('完成度', default=0,
         validators=[MinValueValidator(0), MaxValueValidator(100)])
-    note = models.TextField('メモ')
+    note = models.TextField('メモ', blank=True)
     
     class Meta:
         verbose_name = verbose_name_plural = 'シーン'
@@ -84,7 +84,7 @@ class Actor(models.Model):
     production = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
     name = models.CharField('名前', max_length=50)
-    short_name = models.CharField('短縮名', max_length=5)
+    short_name = models.CharField('短縮名', max_length=5, null=True)
     
     class Meta:
         verbose_name = verbose_name_plural = '役者'
@@ -101,28 +101,15 @@ class Character(models.Model):
     production = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
     name = models.CharField('名前', max_length=50)
-    short_name = models.CharField('短縮名', max_length=5)
+    short_name = models.CharField('短縮名', max_length=5, null=True)
+    cast = models.ForeignKey(Actor, verbose_name='配役',
+        on_delete=models.CASCADE)
     
     class Meta:
         verbose_name = verbose_name_plural = '登場人物'
     
     def __str__(self):
-        return self.name
-
-
-class Casting(models.Model):
-    '''配役
-    '''
-    actor = models.ForeignKey(Actor, verbose_name='役者',
-        on_delete=models.CASCADE)
-    character = models.ForeignKey(Character, verbose_name='登場人物',
-        on_delete=models.CASCADE)
-    
-    class Meta:
-        verbose_name = verbose_name_plural = '配役'
-    
-    def __str__(self):
-        return self.character
+        return '{} ({})'.format(self.name, self.cast)
 
 
 class Attendance(models.Model):
@@ -161,4 +148,4 @@ class Appearance(models.Model):
         verbose_name = verbose_name_plural = '出番'
     
     def __str__(self):
-        return self.scene
+        return str(self.scene)
