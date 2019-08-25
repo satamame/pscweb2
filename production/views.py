@@ -4,7 +4,7 @@ from django.views.generic.edit import CreateView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from production.models import Production, ProdUser
+from .models import Production, ProdUser
 
 class ProdList(LoginRequiredMixin, ListView):
 

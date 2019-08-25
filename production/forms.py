@@ -11,11 +11,13 @@ class ProdUserAdminForm(forms.ModelForm):
 
     def clean_user(self):
         '''ユーザのバリデーション
+        
+        user を検証しているという事は、追加フォームである
         '''
-        # user を検証しているという事は、追加フォームである
+        # 追加しようとする user
         user = self.cleaned_data['user']
         
-        # prod_id が入力されていなければ、そっちの検証に任せる
+        # prod_id が入力されていなければ、そっちで検証されるのでスルー
         if 'production' not in self.cleaned_data:
             return user
         

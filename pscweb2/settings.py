@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts.apps.AccountsConfig',
     'production.apps.ProductionConfig',
+    'rehearsal.apps.RehearsalConfig',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
