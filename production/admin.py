@@ -8,6 +8,8 @@ class ProdUserAdmin(admin.ModelAdmin):
     '''
     list_display = ('__str__', 'production', 'user', 'is_owner', 'is_editor')
     list_filter = ('production',)
+    
+    # バリデーションのためのカスタムフォーム
     form = ProdUserAdminForm
     
     # fields は Form の Meta でも定義しているが、表示順を維持するため
@@ -24,6 +26,7 @@ class ProdUserAdmin(admin.ModelAdmin):
         '''
         self.readonly_fields = ('production','user')
         return super(ProdUserAdmin, self).change_view(request, object_id)
+
 
 admin.site.register(Production)
 admin.site.register(ProdUser, ProdUserAdmin)

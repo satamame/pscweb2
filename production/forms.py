@@ -14,7 +14,7 @@ class ProdUserAdminForm(forms.ModelForm):
         
         user を検証しているという事は、追加フォームである
         '''
-        # 追加しようとする user
+        # 追加しようとしている user
         user = self.cleaned_data['user']
         
         # prod_id が入力されていなければ、そっちで検証されるのでスルー

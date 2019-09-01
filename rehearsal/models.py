@@ -37,6 +37,8 @@ class Place(models.Model):
 
 class Rehearsal(models.Model):
     '''稽古の1コマ分のデータ
+    
+    2日以上にまたがる稽古は、日ごとにコマを分割する
     '''
     production = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
@@ -155,3 +157,16 @@ class Appearance(models.Model):
     def __str__(self):
         # ex. 'シーン1,沙悟浄'
         return '{},{}'.format(self.scene, self.character)
+
+
+class ScnComment(models.Model):
+    '''シーンにつけるコメント
+    '''
+    scene = models.ForeignKey(Scene, verbose_name='シーン',
+        on_delete=models.CASCADE)
+    create_dt = models.DateTimeField('作成日時', auto_now_add=True)
+    modify_dt = models.DateTimeField('変更日時', auto_now=True)
+    comment = models.TextField('コメント')
+    
+    class Meta:
+        verbose_name = verbose_name_plural = 'シーンコメント'
