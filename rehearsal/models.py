@@ -8,7 +8,7 @@ class Facility(models.Model):
     '''
     production = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
-    name = models.CharField('名前', max_length=50)
+    name = models.CharField('施設名', max_length=50)
     url = models.URLField('リンク', blank=True)
     note = models.TextField('メモ', blank=True)
     
@@ -31,7 +31,7 @@ class Place(models.Model):
         verbose_name = verbose_name_plural = '稽古場'
     
     def __str__(self):
-        # ex. 'City hall,Studio #1'
+        # ex. '○○公民館,会議室1'
         return '{},{}'.format(self.facility, self.room_name)
 
 
@@ -51,7 +51,7 @@ class Rehearsal(models.Model):
         verbose_name = verbose_name_plural = '稽古のコマ'
     
     def __str__(self):
-        # ex. '08/30,City hall,Studio #1'
+        # ex. '08/30,○○公民館,会議室1'
         return '{},{}'.format(self.date.strftime('%m/%d'), self.place)
 
 
@@ -100,7 +100,7 @@ class Character(models.Model):
     '''
     production = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
-    name = models.CharField('名前', max_length=50)
+    name = models.CharField('役名', max_length=50)
     short_name = models.CharField('短縮名', max_length=5, null=True)
     cast = models.ForeignKey(Actor, verbose_name='配役',
         on_delete=models.CASCADE)
@@ -109,6 +109,7 @@ class Character(models.Model):
         verbose_name = verbose_name_plural = '登場人物'
     
     def __str__(self):
+        # ex. '沙悟浄 (三橋亮太)'
         return '{} ({})'.format(self.name, self.cast)
 
 
@@ -128,13 +129,17 @@ class Attendance(models.Model):
         verbose_name = verbose_name_plural = '参加時間'
     
     def __str__(self):
-        # ex. '08/30,望月'
-        return '{},{}'.format(self.rehearsal.date.strftime('%m/%d'),
-            self.actor.short_name)
+        # ex. '08/30,三橋,14:00-18:30'
+        return '{},{},{}-{}'.format(self.rehearsal.date.strftime('%m/%d'),
+            self.actor.short_name, self.from_time.strftime('%H:%M'),
+            self.to_time.strftime('%H:%M'))
 
 
 class Appearance(models.Model):
     '''出番
+    
+    あるシーンにある登場人物が出ていれば、このレコードを作る
+    セリフ数は、出席率に重みをつけるのに使う
     '''
     scene = models.ForeignKey(Scene, verbose_name='シーン',
         on_delete=models.CASCADE)
@@ -148,4 +153,5 @@ class Appearance(models.Model):
         verbose_name = verbose_name_plural = '出番'
     
     def __str__(self):
-        return str(self.scene)
+        # ex. 'シーン1,沙悟浄'
+        return '{},{}'.format(self.scene, self.character)

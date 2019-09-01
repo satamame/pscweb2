@@ -30,3 +30,28 @@ class ProdUserAdminForm(forms.ModelForm):
             raise forms.ValidationError("{} はすでに {} のユーザです。"
                 .format(user, production))
         return user
+
+
+# Production 新規作成時の処理をオーバーライドするサンプルコード
+#
+# from .models import Production
+#
+# class ProdCreateForm(forms.ModelForm):
+#     '''Production の追加フォームをカスタマイズ
+#     '''
+#     class Meta:
+#         model = Production
+#         fields = ('name',)
+#     
+#     def save(self, commit=True):
+#         '''保存時の処理をオーバーライド
+#         '''
+#         # 保存するべきものを取得する
+#         m = super().save(commit=False)
+#         
+#         # 何らかの処理 (本来はデータを加工したりするところ)
+#         print('ProdCreateForm.save()', self.user)
+#         
+#         if commit:
+#             m.save()
+#         return m
