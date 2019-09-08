@@ -3,9 +3,21 @@
 {% block content %}
 <h1 style="margin: 0px;">公演一覧</h1>
 <div align="right"><a href="{% url 'production:prod_create' %}" class="addlink">新規作成</a></div>
-<ul>
+<table>
+    <tr>
+        <th>公演</th>
+        <th>所有権</th>
+        <th>編集権</th>
+    </tr>
     {% for item in object_list %}
-    <li>{{ item }}</li>
+    <tr>
+        <td>
+            <a href="{% url 'rehearsal:rhsl_list' prod_id=item.production.id %}">
+                {{ item.production }}</a>
+        </td>
+        <td>{{ item.is_owner }}</td>
+        <td>{{ item.is_editor }}</td>
+    </tr>
     {% endfor %}
-</ul>
+</table>
 {% endblock %}

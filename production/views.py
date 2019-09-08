@@ -9,18 +9,18 @@ from .models import Production, ProdUser
 
 class ProdList(LoginRequiredMixin, ListView):
     '''Production のリストビュー
+    
+    ログインユーザの公演のみ表示するため、モデルは ProdUser
     '''
-    model = Production
+    model = ProdUser
+    template_name = 'production/production_list.html'
     
     def get_queryset(self):
         '''リストに表示するレコードをフィルタする
         '''
         # 自分である ProdUser を取得する
         prod_users = ProdUser.objects.filter(user=self.request.user)
-        
-        # それらに含まれる Production だけをリスト表示する
-        return Production.objects.filter(
-            id__in=[u.production.id for u in prod_users])
+        return prod_users
 
 
 class ProdCreate(LoginRequiredMixin, CreateView):

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="margin: 0px;">シーン一覧</h1>
+<table>
+    <tr>
+        <th>シーン名</th>
+        <th>完成度</th>
+        <th>メモ</th>
+    </tr>
+    {% for item in object_list %}
+    <tr>
+        <td>{{ item.name }}</td>
+        <td>{{ item.progress }}</td>
+        <td>{{ item.note }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

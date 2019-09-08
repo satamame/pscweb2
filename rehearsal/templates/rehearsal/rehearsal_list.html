@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="margin: 0px;">稽古一覧</h1>
+<div align="right"><a href="{% url 'rehearsal:rhsl_create' prod_id=prod_id %}" class="addlink">新規作成</a></div>
+<table>
+    <tr>
+        <th>日付</th>
+        <th>開始</th>
+        <th>終了</th>
+        <th>場所</th>
+        <th>メモ</th>
+    </tr>
+    {% for item in object_list %}
+    <tr>
+        <td>{{ item.date }}</td>
+        <td>{{ item.start_time }}</td>
+        <td>{{ item.end_time }}</td>
+        <td>{{ item.place }}</td>
+        <td>{{ item.note }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
