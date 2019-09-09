@@ -27,7 +27,7 @@ class ProdUserAdminForm(forms.ModelForm):
         
         # 追加なので、同じ production, user のレコードが見つかったら重複
         if len(dupe) > 0:
-            raise forms.ValidationError("{} はすでに {} のユーザです。"
+            raise forms.ValidationError('{} はすでに {} のユーザです。'
                 .format(user, production))
         return user
 

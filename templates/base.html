@@ -21,6 +21,8 @@
     <script type="text/javascript" src="{% static 'admin/js/core.js' %}"></script>
     <script type="text/javascript" src="{% static 'admin/js/admin/RelatedObjectLookups.js' %}"></script>
     <!-- end for admin widgets -->
+    
+    {% block head %}{% endblock %}
 </head>
     
 <body>
@@ -49,9 +51,9 @@
             {% endfor %}
         </ul>
         {% endif %}
-        <div class="breadcrumbs">
+        <!-- div class="breadcrumbs">
             {% block breadcrumbs %}{% endblock %}
-        </div>
+        </div -->
         {% block content %}{% endblock %}
     </div>
 </div>

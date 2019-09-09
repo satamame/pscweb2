@@ -42,7 +42,7 @@ class ProdCreate(LoginRequiredMixin, CreateView):
             is_owner=True)
         pu.save()
         
-        messages.success(self.request, form.instance.name + " を作成しました。")
+        messages.success(self.request, str(form.instance) + " を作成しました。")
         return super().form_valid(form)
     
     def form_invalid(self, form):

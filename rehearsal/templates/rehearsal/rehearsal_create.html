@@ -5,8 +5,31 @@
 <form method="post">
     {% csrf_token %}
     <table>
+        <tr><th><label>公演:</label></th><td>{{ production }}</td></tr>
         {{ form }}
     </table>
     <input type="submit" value="作成">
 </form>
+{% endblock %}
+
+{% block head %}
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/timedropper/1.0/timedropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/timedropper/1.0/timedropper.min.js"></script>
+{% endblock %}
+
+{% block javascript %}
+<script>
+    $(function () {
+        // timedropper
+        $("#id_start_time").timeDropper({
+            format: "H:mm",
+            setCurrentTime: false,
+        });
+        $("#id_end_time").timeDropper({
+            format: "H:mm",
+            setCurrentTime: false,
+        });
+    });
+</script>
 {% endblock %}
