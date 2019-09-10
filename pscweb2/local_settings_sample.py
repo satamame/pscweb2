@@ -1,5 +1,6 @@
 # 1. Replace the values of SECRET_KEY and DATABASES' PASSWORD
 #    with the actual ones.
+#    See https://qiita.com/haessal/items/abaef7ee4fdbd3b218f5#get_random_secret_key .
 # 2. Rename this file to 'local_settings.py'.
 
 import os
