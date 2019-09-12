@@ -1,13 +1,13 @@
 from django.shortcuts import render
 from django.views.generic import ListView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from production.models import Production, ProdUser
-from .models import Rehearsal, Scene
-from .forms import RhslCreateForm
+from .models import Rehearsal, Scene, Place, Facility
+from .forms import RhslForm
 
 class RhslList(LoginRequiredMixin, ListView):
     '''Rehearsal のリストビュー
@@ -51,8 +51,7 @@ class RhslCreate(LoginRequiredMixin, CreateView):
     '''Rehearsal の追加ビュー
     '''
     model = Rehearsal
-    form_class = RhslCreateForm
-    template_name_suffix = '_create'
+    form_class = RhslForm
     
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
@@ -67,14 +66,22 @@ class RhslCreate(LoginRequiredMixin, CreateView):
     
     def get_context_data(self, **kwargs):
         '''テンプレートに渡すパラメタを改変する
-        
-        TODO: その公演の稽古場のみ表示するようにする
-        
         '''
         context = super().get_context_data(**kwargs)
         
-        # リクエストから取った production をセット
+        # リクエストから取った production をセット (表示用)
         context['production'] = self.production
+        
+        # その公演の稽古場のみ表示するようにする
+        # その公演の稽古施設
+        facilities = Facility.objects.filter(production=self.production)
+        # その施設を含む稽古場
+        places = Place.objects.filter(facility__in=facilities)
+        # 選択肢を作成
+        choices = [('', '---------')]
+        choices.extend([(p.id, str(p)) for p in places])
+        # Form にセット (選択肢以外の値はエラーにしてくれる)
+        context['form'].fields['place'].choices = choices
         
         return context
     
@@ -138,6 +145,60 @@ class RhslCreate(LoginRequiredMixin, CreateView):
             raise PermissionDenied
         
         self.production = prods[0]
+
+
+class RhslUpdate(LoginRequiredMixin, UpdateView):
+    '''Rehearsal の更新ビュー
+    '''
+    model = Rehearsal
+    form_class = RhslForm
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # 自分を含む公演ユーザを取得する
+        production = self.get_object().production
+        prod_users = ProdUser.objects.filter(
+            production=production, user=request.user)
+        
+        # 自分が含まれていなければアクセス権エラー
+        if len(prod_users) < 1:
+            raise PermissionDenied
+        
+        # 所有権または編集件を持っていなければアクセス権エラー
+        if not (prod_users[0].is_owner or prod_users[0].is_editor):
+            raise PermissionDenied
+        
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+        
+        # オブジェクトから取った production をセット (表示用)
+        production = self.get_object().production
+        context['production'] = production
+
+        # その公演の稽古場のみ表示するようにする
+        # その公演の稽古施設
+        facilities = Facility.objects.filter(production=production)
+        # その施設を含む稽古場
+        places = Place.objects.filter(facility__in=facilities)
+        # 選択肢を作成
+        choices = [('', '---------')]
+        choices.extend([(p.id, str(p)) for p in places])
+        # Form にセット (選択肢以外の値はエラーにしてくれる)
+        context['form'].fields['place'].choices = choices
+        
+        return context
+    
+    def get_success_url(self):
+        '''バリデーションに成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.get_object().production.id
+        url = reverse_lazy('rehearsal:rhsl_list', kwargs={'prod_id': prod_id})
+        return url
 
 
 class ScnList(LoginRequiredMixin, ListView):

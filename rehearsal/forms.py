@@ -4,8 +4,8 @@ from production.models import Production
 from .models import Rehearsal
 
 
-class RhslCreateForm(forms.ModelForm):
-    '''新規稽古作成フォーム
+class RhslForm(forms.ModelForm):
+    '''稽古の追加・更新フォーム
     '''
     class Meta:
         model = Rehearsal
@@ -22,5 +22,6 @@ class RhslCreateForm(forms.ModelForm):
         
         # end_time が start_time より遅くなければエラー
         if end_time <= start_time:
-            raise forms.ValidationError('終了時刻は開始時刻より遅くしてください。')
+            raise forms.ValidationError(
+                '終了時刻は開始時刻より遅くしてください。')
         return end_time

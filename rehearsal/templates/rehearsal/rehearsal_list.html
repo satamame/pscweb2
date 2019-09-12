@@ -15,7 +15,10 @@
     </tr>
     {% for item in object_list %}
     <tr>
-        <td>{{ item.date }}</td>
+        <td>
+            <a href="{% url 'rehearsal:rhsl_update' pk=item.id %}">
+            {{ item.date }}</a>
+        </td>
         <td>{{ item.start_time }}</td>
         <td>{{ item.end_time }}</td>
         <td>{{ item.place }}</td>
