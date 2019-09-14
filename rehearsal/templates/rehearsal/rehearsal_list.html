@@ -16,7 +16,7 @@
     {% for item in object_list %}
     <tr>
         <td>
-            <a href="{% url 'rehearsal:rhsl_update' pk=item.id %}">
+            <a href="{% url 'rehearsal:rhsl_detail' pk=item.id %}">
             {{ item.date }}</a>
         </td>
         <td>{{ item.start_time }}</td>

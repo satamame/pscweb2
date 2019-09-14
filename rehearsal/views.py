@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.views.generic import ListView
+from django.views.generic import ListView, TemplateView, DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -8,6 +8,30 @@ from django.core.exceptions import PermissionDenied
 from production.models import Production, ProdUser
 from .models import Rehearsal, Scene, Place, Facility
 from .forms import RhslForm
+
+
+class RhslTop(LoginRequiredMixin, TemplateView):
+    '''Rehearsal のトップページ
+    '''
+    template_name = 'rehearsal/rehearsal_top.html'
+
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けたハンドラ
+        '''
+        # prod_id から公演を取得する
+        prod_id=self.kwargs['prod_id']
+        prod_users = ProdUser.objects.filter(
+            production__pk=prod_id, user=self.request.user)
+        
+        # 自分が含まれていなければアクセス権エラー
+        if len(prod_users) < 1:
+            raise PermissionDenied
+        
+        # prod_id をインスタンス属性として持っておく
+        self.prod_id = prod_users[0].production.id
+        
+        return super().get(request, *args, **kwargs)
+
 
 class RhslList(LoginRequiredMixin, ListView):
     '''Rehearsal のリストビュー
@@ -199,6 +223,29 @@ class RhslUpdate(LoginRequiredMixin, UpdateView):
         prod_id = self.get_object().production.id
         url = reverse_lazy('rehearsal:rhsl_list', kwargs={'prod_id': prod_id})
         return url
+
+
+class RhslDetail(LoginRequiredMixin, DetailView):
+    '''Rehearsal の詳細ビュー
+    '''
+    model = Rehearsal
+
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # 自分を含む公演ユーザを取得する
+        production = self.get_object().production
+        prod_users = ProdUser.objects.filter(
+            production=production, user=request.user)
+        
+        # 自分が含まれていなければアクセス権エラー
+        if len(prod_users) < 1:
+            raise PermissionDenied
+        
+        # 自分の prod_user をインスタンス属性として持っておく
+        self.prod_user = prod_users[0]
+
+        return super().get(request, *args, **kwargs)
 
 
 class ScnList(LoginRequiredMixin, ListView):

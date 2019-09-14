@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>
+稽古の詳細
+</h1>
+{% if view.prod_user.is_owner or view.prod_user.is_editor %}
+<div align="right"><a href="{% url 'rehearsal:rhsl_update' pk=object.id %}" class="changelink">編集</a></div>
+{% endif %}
+<table>
+    <tr><th>公演</th><td>{{ object.production }}</td></tr>
+    <tr><th>日付</th><td>{{ object.date }}</td></tr>
+    <tr><th>場所</th><td>{{ object.place }}</td></tr>
+    <tr><th>時間</th><td>{{ object.start_time }} - {{ object.end_time }}</td></tr>
+    <tr><th>メモ</th><td>{{ object.note }}</td></tr>
+</table>
+{% endblock %}

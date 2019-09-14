@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="margin: 0px;">稽古トップ</h1>
+<ul>
+<li><a href="{% url 'rehearsal:rhsl_list' prod_id=view.prod_id %}">
+    稽古一覧</a></li>
+</ul>
+{% endblock %}

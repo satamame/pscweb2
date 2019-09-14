@@ -12,7 +12,7 @@
     {% for item in object_list %}
     <tr>
         <td>
-            <a href="{% url 'rehearsal:rhsl_list' prod_id=item.production.id %}">
+            <a href="{% url 'rehearsal:rhsl_top' prod_id=item.production.id %}">
                 {{ item.production }}</a>
         </td>
         <td>{{ item.is_owner }}</td>
