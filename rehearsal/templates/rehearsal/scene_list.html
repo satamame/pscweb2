@@ -2,17 +2,27 @@
 
 {% block content %}
 <h1 style="margin: 0px;">シーン一覧</h1>
+{% if view.prod_user.is_owner or view.prod_user.is_editor %}
+<div align="right"><a href="{% url 'rehearsal:scn_create' prod_id=prod_id %}" class="addlink">新規作成</a></div>
+{% endif %}
 <table>
     <tr>
         <th>シーン名</th>
         <th>完成度</th>
+        <th>優先度</th>
         <th>メモ</th>
+        <th>ソートキー</th>
     </tr>
     {% for item in object_list %}
     <tr>
-        <td>{{ item.name }}</td>
+        <td>
+            <a href="{% url 'rehearsal:scn_detail' pk=item.id %}">
+            {{ item.name }}</a>
+        </td>
         <td>{{ item.progress }}</td>
+        <td>{{ item.priority }}</td>
         <td>{{ item.note }}</td>
+        <td>{{ item.sortkey }}</td>
     </tr>
     {% endfor %}
 </table>

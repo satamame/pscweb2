@@ -68,9 +68,18 @@ class Scene(models.Model):
     sortkey = models.IntegerField('ソートキー', default=0)
     length = models.IntegerField('長さ', default=1,
         validators=[MinValueValidator(1)])
-    length_auto = models.BooleanField('長さを自動で決める', default=True)
+    length_auto = models.BooleanField('長さは適当', default=True)
     progress = models.IntegerField('完成度', default=0,
         validators=[MinValueValidator(0), MaxValueValidator(100)])
+    PRIORITY_CHOICES = (
+        (1, '最高'),
+        (2, '高め'),
+        (3, '普通'),
+        (4, '低め'),
+        (5, '最低'),
+    )
+    priority = models.IntegerField('優先度', default=3,
+        choices=PRIORITY_CHOICES)
     note = models.TextField('メモ', blank=True)
     
     class Meta:
@@ -119,6 +128,8 @@ class Attendance(models.Model):
     '''参加時間
     
     1コマの稽古に同じ人の参加時間が複数回あっても良い
+    is_absent が True のレコードは特別な意味を持ち、
+    同じ稽古にそれ以外のレコードをセットできない
     '''
     rehearsal = models.ForeignKey(Rehearsal, verbose_name='稽古のコマ',
         on_delete=models.CASCADE)
@@ -126,6 +137,7 @@ class Attendance(models.Model):
         on_delete=models.CASCADE)
     from_time = models.TimeField('From')
     to_time = models.TimeField('To')
+    is_absent = models.BooleanField('欠席', default=False)
     
     class Meta:
         verbose_name = verbose_name_plural = '参加時間'

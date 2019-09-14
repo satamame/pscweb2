@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.admin.widgets import AdminDateWidget, AdminTimeWidget
 from production.models import Production
-from .models import Rehearsal
+from .models import Rehearsal, Scene
 
 
 class RhslForm(forms.ModelForm):
@@ -25,3 +25,12 @@ class RhslForm(forms.ModelForm):
             raise forms.ValidationError(
                 '終了時刻は開始時刻より遅くしてください。')
         return end_time
+
+
+class ScnForm(forms.ModelForm):
+    '''シーンの追加・更新フォーム
+    '''
+    class Meta:
+        model = Scene
+        fields = ('name', 'sortkey', 'length', 'length_auto', 'progress',
+            'priority', 'note')

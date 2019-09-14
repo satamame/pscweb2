@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>
+シーンの詳細
+</h1>
+{% if view.prod_user.is_owner or view.prod_user.is_editor %}
+<div align="right"><a href="{% url 'rehearsal:scn_update' pk=object.id %}" class="changelink">編集</a></div>
+{% endif %}
+<table>
+    <tr><th>公演</th><td>{{ object.production }}</td></tr>
+    <tr><th>シーン名</th><td>{{ object.name }}</td></tr>
+    <tr><th>ソートキー</th><td>{{ object.sortkey }}</td></tr>
+    <tr><th>長さ</th><td>{{ object.length }}</td></tr>
+    <tr><th>長さは適当</th><td>{{ object.length_auto }}</td></tr>
+    <tr><th>完成度</th><td>{{ object.progress }}</td></tr>
+    <tr><th>優先度</th><td>{{ object.priority }}</td></tr>
+    <tr><th>メモ</th><td>{{ object.note }}</td></tr>
+</table>
+{% endblock %}
