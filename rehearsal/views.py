@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from production.models import Production, ProdUser
 from .models import Rehearsal, Scene, Place, Facility, Character, Actor
-from .forms import RhslForm, ScnForm, ChrForm
+from .forms import RhslForm, ScnForm, ChrForm, ActrForm
 
 
 def accessing_prod_user(view, prod_id=None):
@@ -28,10 +28,136 @@ def accessing_prod_user(view, prod_id=None):
     return prod_users[0]
 
 
+class ProdBaseListView(LoginRequiredMixin, ListView):
+    '''アクセス権を検査する ListView の Base class
+    '''
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けたハンドラ
+        '''
+        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        prod_user = accessing_prod_user(self)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # アクセス中の prod_user を view の属性として持っておく
+        # 新規作成の可否を知るため
+        self.prod_user = prod_user
+        
+        return super().get(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+        context['prod_id'] = self.kwargs['prod_id']
+        return context
+
+
+class ProdBaseCreateView(LoginRequiredMixin, CreateView):
+    '''アクセス権を検査する CreateView の Base class
+    '''
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # production を view の属性として持っておく
+        # パーミッションも検査される
+        try:
+            self.get_prod_from_request()
+        except:
+            raise
+        
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # production を view の属性として持っておく
+        # パーミッションも検査される
+        try:
+            self.get_prod_from_request()
+        except:
+            raise
+        
+        return super().post(request, *args, **kwargs)
+
+    def form_invalid(self, form):
+        ''' バリデーションに失敗した時
+        '''
+        messages.warning(self.request, "作成できませんでした。")
+        return super().form_invalid(form)
+    
+    def get_prod_from_request(self):
+        '''リクエストから production を取得し保持する
+        
+        アクセス権がなければ PermissionDenied を返す
+        '''
+        # アクセス情報から公演ユーザを取得する
+        prod_user = accessing_prod_user(self)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # 所有権または編集権を持っていなければアクセス権エラー
+        if not (prod_user.is_owner or prod_user.is_editor):
+            raise PermissionDenied
+        
+        # production を view の属性として持っておく
+        self.production = prod_user.production
+
+
+class ProdBaseUpdateView(LoginRequiredMixin, UpdateView):
+    '''アクセス権を検査する UpdateView の Base class
+    '''
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        prod_id = self.get_object().production.id
+        prod_user = accessing_prod_user(self, prod_id=prod_id)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # 所有権または編集権を持っていなければアクセス権エラー
+        if not (prod_user.is_owner or prod_user.is_editor):
+            raise PermissionDenied
+        
+        return super().get(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        ''' バリデーションを通った時
+        '''
+        messages.success(self.request, str(form.instance) + " を更新しました。")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        ''' バリデーションに失敗した時
+        '''
+        messages.warning(self.request, "更新できませんでした。")
+        return super().form_invalid(form)
+
+
+class ProdBaseDetailView(LoginRequiredMixin, DetailView):
+    '''アクセス権を検査する DetailView の Base class
+    '''
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        prod_id = self.get_object().production.id
+        prod_user = accessing_prod_user(self, prod_id=prod_id)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # アクセス中の prod_user を view の属性として持っておく
+        # 編集の可否を知るため
+        self.prod_user = prod_user
+        
+        return super().get(request, *args, **kwargs)
+
+
 class RhslTop(LoginRequiredMixin, TemplateView):
     '''Rehearsal のトップページ
     '''
-    template_name = 'rehearsal/rehearsal_top.html'
+    template_name = 'rehearsal/top.html'
     
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けたハンドラ
@@ -47,26 +173,12 @@ class RhslTop(LoginRequiredMixin, TemplateView):
         return super().get(request, *args, **kwargs)
 
 
-class RhslList(LoginRequiredMixin, ListView):
+class RhslList(ProdBaseListView):
     '''Rehearsal のリストビュー
 
     Template 名: rehearsal_list (default)
     '''
     model = Rehearsal
-    
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けたハンドラ
-        '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_user = accessing_prod_user(self)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # アクセス中の prod_user を view の属性として持っておく
-        # 新規作成の可否を知るため
-        self.prod_user = prod_user
-        
-        return super().get(request, *args, **kwargs)
     
     def get_queryset(self):
         '''リストに表示するレコードをフィルタする
@@ -76,31 +188,12 @@ class RhslList(LoginRequiredMixin, ListView):
         return Rehearsal.objects.filter(production__pk=prod_id)\
             .order_by('date', 'start_time')
 
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
-        '''
-        context = super().get_context_data(**kwargs)
-        context['prod_id'] = self.kwargs['prod_id']
-        return context
 
-
-class RhslCreate(LoginRequiredMixin, CreateView):
+class RhslCreate(ProdBaseCreateView):
     '''Rehearsal の追加ビュー
     '''
     model = Rehearsal
     form_class = RhslForm
-    
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けるハンドラ
-        '''
-        # production を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_prod_from_request()
-        except:
-            raise
-        
-        return super().get(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
         '''テンプレートに渡すパラメタを改変する
@@ -123,18 +216,6 @@ class RhslCreate(LoginRequiredMixin, CreateView):
         
         return context
     
-    def post(self, request, *args, **kwargs):
-        '''保存時のリクエストを受けるハンドラ
-        '''
-        # production を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_prod_from_request()
-        except:
-            raise
-        
-        return super().post(request, *args, **kwargs)
-    
     def form_valid(self, form):
         ''' バリデーションを通った時
         '''
@@ -153,52 +234,14 @@ class RhslCreate(LoginRequiredMixin, CreateView):
         prod_id = self.production.id
         url = reverse_lazy('rehearsal:rhsl_list', kwargs={'prod_id': prod_id})
         return url
-    
-    def form_invalid(self, form):
-        ''' バリデーションに失敗した時
-        '''
-        messages.warning(self.request, "作成できませんでした。")
-        return super().form_invalid(form)
-    
-    def get_prod_from_request(self):
-        '''リクエストから production を取得し保持する
-        
-        アクセス権がなければ PermissionDenied を返す
-        '''
-        # アクセス情報から公演ユーザを取得する
-        prod_user = accessing_prod_user(self)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
-        
-        # production を view の属性として持っておく
-        self.production = prod_user.production
 
 
-class RhslUpdate(LoginRequiredMixin, UpdateView):
+class RhslUpdate(ProdBaseUpdateView):
     '''Rehearsal の更新ビュー
     '''
     model = Rehearsal
     form_class = RhslForm
     
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けるハンドラ
-        '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_id = self.get_object().production.id
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
-        
-        return super().get(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         '''テンプレートに渡すパラメタを改変する
         '''
@@ -221,67 +264,26 @@ class RhslUpdate(LoginRequiredMixin, UpdateView):
         
         return context
     
-    def form_valid(self, form):
-        ''' バリデーションを通った時
-        '''
-        messages.success(self.request, str(form.instance) + " を更新しました。")
-        return super().form_valid(form)
-    
     def get_success_url(self):
         '''バリデーションに成功した時の遷移先を動的に与える
         '''
         prod_id = self.get_object().production.id
         url = reverse_lazy('rehearsal:rhsl_list', kwargs={'prod_id': prod_id})
         return url
-    
-    def form_invalid(self, form):
-        ''' バリデーションに失敗した時
-        '''
-        messages.warning(self.request, "更新できませんでした。")
-        return super().form_invalid(form)
 
 
-class RhslDetail(LoginRequiredMixin, DetailView):
+class RhslDetail(ProdBaseDetailView):
     '''Rehearsal の詳細ビュー
     '''
     model = Rehearsal
 
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けるハンドラ
-        '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_id = self.get_object().production.id
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # アクセス中の prod_user を view の属性として持っておく
-        # 編集の可否を知るため
-        self.prod_user = prod_user
-        
-        return super().get(request, *args, **kwargs)
 
-
-class ScnList(LoginRequiredMixin, ListView):
+class ScnList(ProdBaseListView):
     '''Scene のリストビュー
 
     Template 名: scene_list (default)
     '''
     model = Scene
-
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けるハンドラ
-        '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_user = accessing_prod_user(self)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # アクセス中の prod_user を view の属性として持っておく
-        # 新規作成の可否を知るため
-        self.prod_user = prod_user
-        
-        return super().get(request, *args, **kwargs)
     
     def get_queryset(self):
         '''リストに表示するレコードをフィルタする
@@ -290,32 +292,13 @@ class ScnList(LoginRequiredMixin, ListView):
         
         return Scene.objects.filter(production__pk=prod_id)\
             .order_by('sortkey',)
-    
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
-        '''
-        context = super().get_context_data(**kwargs)
-        context['prod_id'] = self.kwargs['prod_id']
-        return context
 
 
-class ScnCreate(LoginRequiredMixin, CreateView):
+class ScnCreate(ProdBaseCreateView):
     '''Scene の追加ビュー
     '''
     model = Scene
     form_class = ScnForm
-    
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けるハンドラ
-        '''
-        # production を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_prod_from_request()
-        except:
-            raise
-        
-        return super().get(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
         '''テンプレートに渡すパラメタを改変する
@@ -326,18 +309,6 @@ class ScnCreate(LoginRequiredMixin, CreateView):
         context['production'] = self.production
         
         return context
-    
-    def post(self, request, *args, **kwargs):
-        '''保存時のリクエストを受けるハンドラ
-        '''
-        # production を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_prod_from_request()
-        except:
-            raise
-        
-        return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
         ''' バリデーションを通った時
@@ -358,52 +329,14 @@ class ScnCreate(LoginRequiredMixin, CreateView):
         prod_id = self.production.id
         url = reverse_lazy('rehearsal:scn_list', kwargs={'prod_id': prod_id})
         return url
-    
-    def form_invalid(self, form):
-        ''' バリデーションに失敗した時
-        '''
-        messages.warning(self.request, "作成できませんでした。")
-        return super().form_invalid(form)
-    
-    def get_prod_from_request(self):
-        '''リクエストから production を取得し保持する
-        
-        アクセス権がなければ PermissionDenied を返す
-        '''
-        # アクセス情報から公演ユーザを取得する
-        prod_user = accessing_prod_user(self)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
-        
-        # production を view の属性として持っておく
-        self.production = prod_user.production
 
 
-class ScnUpdate(LoginRequiredMixin, UpdateView):
+class ScnUpdate(ProdBaseUpdateView):
     '''Scene の更新ビュー
     '''
     model = Scene
     form_class = ScnForm
     
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けるハンドラ
-        '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_id = self.get_object().production.id
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
-        
-        return super().get(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         '''テンプレートに渡すパラメタを改変する
         '''
@@ -415,67 +348,26 @@ class ScnUpdate(LoginRequiredMixin, UpdateView):
         
         return context
     
-    def form_valid(self, form):
-        ''' バリデーションを通った時
-        '''
-        messages.success(self.request, str(form.instance) + " を更新しました。")
-        return super().form_valid(form)
-    
     def get_success_url(self):
         '''バリデーションに成功した時の遷移先を動的に与える
         '''
         prod_id = self.get_object().production.id
         url = reverse_lazy('rehearsal:scn_list', kwargs={'prod_id': prod_id})
         return url
-    
-    def form_invalid(self, form):
-        ''' バリデーションに失敗した時
-        '''
-        messages.warning(self.request, "更新できませんでした。")
-        return super().form_invalid(form)
 
 
-class ScnDetail(LoginRequiredMixin, DetailView):
+class ScnDetail(ProdBaseDetailView):
     '''Scene の詳細ビュー
     '''
     model = Scene
 
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けるハンドラ
-        '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_id = self.get_object().production.id
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # アクセス中の prod_user を view の属性として持っておく
-        # 編集の可否を知るため
-        self.prod_user = prod_user
-        
-        return super().get(request, *args, **kwargs)
 
-
-class ChrList(LoginRequiredMixin, ListView):
+class ChrList(ProdBaseListView):
     '''Character のリストビュー
 
     Template 名: character_list (default)
     '''
     model = Character
-
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けるハンドラ
-        '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_user = accessing_prod_user(self)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # アクセス中の prod_user を view の属性として持っておく
-        # 新規作成の可否を知るため
-        self.prod_user = prod_user
-        
-        return super().get(request, *args, **kwargs)
     
     def get_queryset(self):
         '''リストに表示するレコードをフィルタする
@@ -484,32 +376,13 @@ class ChrList(LoginRequiredMixin, ListView):
         
         return Character.objects.filter(production__pk=prod_id)\
             .order_by('sortkey',)
-    
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
-        '''
-        context = super().get_context_data(**kwargs)
-        context['prod_id'] = self.kwargs['prod_id']
-        return context
 
 
-class ChrCreate(LoginRequiredMixin, CreateView):
+class ChrCreate(ProdBaseCreateView):
     '''Character の追加ビュー
     '''
     model = Character
     form_class = ChrForm
-    
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けるハンドラ
-        '''
-        # production を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_prod_from_request()
-        except:
-            raise
-        
-        return super().get(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
         '''テンプレートに渡すパラメタを改変する
@@ -528,18 +401,6 @@ class ChrCreate(LoginRequiredMixin, CreateView):
         context['form'].fields['cast'].choices = choices
         
         return context
-    
-    def post(self, request, *args, **kwargs):
-        '''保存時のリクエストを受けるハンドラ
-        '''
-        # production を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_prod_from_request()
-        except:
-            raise
-        
-        return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
         ''' バリデーションを通った時
@@ -560,52 +421,14 @@ class ChrCreate(LoginRequiredMixin, CreateView):
         prod_id = self.production.id
         url = reverse_lazy('rehearsal:chr_list', kwargs={'prod_id': prod_id})
         return url
-    
-    def form_invalid(self, form):
-        ''' バリデーションに失敗した時
-        '''
-        messages.warning(self.request, "作成できませんでした。")
-        return super().form_invalid(form)
-    
-    def get_prod_from_request(self):
-        '''リクエストから production を取得し保持する
-        
-        アクセス権がなければ PermissionDenied を返す
-        '''
-        # アクセス情報から公演ユーザを取得する
-        prod_user = accessing_prod_user(self)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
-        
-        # production を view の属性として持っておく
-        self.production = prod_user.production
 
 
-class ChrUpdate(LoginRequiredMixin, UpdateView):
+class ChrUpdate(ProdBaseUpdateView):
     '''Character の更新ビュー
     '''
     model = Character
     form_class = ChrForm
     
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けるハンドラ
-        '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_id = self.get_object().production.id
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
-        
-        return super().get(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         '''テンプレートに渡すパラメタを改変する
         '''
@@ -625,42 +448,79 @@ class ChrUpdate(LoginRequiredMixin, UpdateView):
         
         return context
     
-    def form_valid(self, form):
-        ''' バリデーションを通った時
-        '''
-        messages.success(self.request, str(form.instance) + " を更新しました。")
-        return super().form_valid(form)
-    
     def get_success_url(self):
         '''バリデーションに成功した時の遷移先を動的に与える
         '''
         prod_id = self.get_object().production.id
         url = reverse_lazy('rehearsal:chr_list', kwargs={'prod_id': prod_id})
         return url
-    
-    def form_invalid(self, form):
-        ''' バリデーションに失敗した時
-        '''
-        messages.warning(self.request, "更新できませんでした。")
-        return super().form_invalid(form)
 
 
-class ChrDetail(LoginRequiredMixin, DetailView):
+class ChrDetail(ProdBaseDetailView):
     '''Character の詳細ビュー
     '''
     model = Character
 
-    def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けるハンドラ
+
+class ActrList(ProdBaseListView):
+    '''Actor のリストビュー
+
+    Template 名: actor_list (default)
+    '''
+    model = Actor
+    
+    def get_queryset(self):
+        '''リストに表示するレコードをフィルタする
         '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        prod_id=self.kwargs['prod_id']
+        
+        return Actor.objects.filter(production__pk=prod_id)\
+            .order_by('name',)
+
+
+class ActrCreate(ProdBaseCreateView):
+    '''Actor の追加ビュー
+    '''
+    model = Actor
+    form_class = ActrForm
+    
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+        
+        # リクエストから取った production をセット (表示用)
+        context['production'] = self.production
+        
+        return context
+
+
+class ActrUpdate(ProdBaseUpdateView):
+    '''Actor の更新ビュー
+    '''
+    model = Actor
+    form_class = ActrForm
+    
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+        
+        # オブジェクトから取った production をセット (表示用)
+        production = self.get_object().production
+        context['production'] = production
+        
+        return context
+    
+    def get_success_url(self):
+        '''バリデーションに成功した時の遷移先を動的に与える
+        '''
         prod_id = self.get_object().production.id
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # アクセス中の prod_user を view の属性として持っておく
-        # 編集の可否を知るため
-        self.prod_user = prod_user
-        
-        return super().get(request, *args, **kwargs)
+        url = reverse_lazy('rehearsal:actr_list', kwargs={'prod_id': prod_id})
+        return url
+
+
+class ActrDetail(ProdBaseDetailView):
+    '''Actor の詳細ビュー
+    '''
+    model = Actor

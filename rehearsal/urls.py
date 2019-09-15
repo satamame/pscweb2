@@ -43,4 +43,16 @@ urlpatterns = [
     # /rhsl/chr_detail/1/ -> Character #1 Detail
     path('chr_detail/<int:pk>/', views.ChrDetail.as_view(),
         name='chr_detail'),
+
+    # /rhsl/actr_list/1/ -> Actor List for Production #1
+    path('actr_list/<int:prod_id>/', views.ActrList.as_view(), name='actr_list'),
+    # /rhsl/actr_create/1/ -> Actor Create for Production #1
+    path('actr_create/<int:prod_id>/', views.ActrCreate.as_view(),
+        name='actr_create'),
+    # /rhsl/actr_update/1/ -> Actor #1 Update
+    path('actr_update/<int:pk>/', views.ActrUpdate.as_view(),
+        name='actr_update'),
+    # /rhsl/actr_detail/1/ -> Actor #1 Detail
+    path('actr_detail/<int:pk>/', views.ActrDetail.as_view(),
+        name='actr_detail'),
 ]
