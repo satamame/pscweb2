@@ -494,6 +494,26 @@ class ActrCreate(ProdBaseCreateView):
         
         return context
 
+    def form_valid(self, form):
+        ''' バリデーションを通った時
+        '''
+        # 保存しようとするレコードを取得する
+        new_actr = form.save(commit=False)
+        
+        # 追加する actor の production として、取っておいた属性をセット
+        new_actr.production = self.production
+        
+        messages.success(self.request, str(form.instance)
+            + " を作成しました。")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        '''バリデーションに成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.production.id
+        url = reverse_lazy('rehearsal:actr_list', kwargs={'prod_id': prod_id})
+        return url
+
 
 class ActrUpdate(ProdBaseUpdateView):
     '''Actor の更新ビュー
