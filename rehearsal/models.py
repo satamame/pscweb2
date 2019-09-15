@@ -43,7 +43,7 @@ class Rehearsal(models.Model):
     production = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
     place = models.ForeignKey(Place, verbose_name='稽古場',
-        on_delete=models.SET_NULL, null=True)
+        on_delete=models.SET_NULL, blank=True, null=True)
     date = models.DateField('日付')
     start_time = models.TimeField('開始')
     end_time = models.TimeField('終了')
@@ -65,7 +65,7 @@ class Scene(models.Model):
     production = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
     name = models.CharField('シーン名', max_length=50)
-    sortkey = models.IntegerField('ソートキー', default=0)
+    sortkey = models.IntegerField('順番', default=0)
     length = models.IntegerField('長さ', default=1,
         validators=[MinValueValidator(1)])
     length_auto = models.BooleanField('長さは適当', default=True)
@@ -95,7 +95,7 @@ class Actor(models.Model):
     production = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
     name = models.CharField('名前', max_length=50)
-    short_name = models.CharField('短縮名', max_length=5, null=True)
+    short_name = models.CharField('短縮名', max_length=5, blank=True)
     
     class Meta:
         verbose_name = verbose_name_plural = '役者'
@@ -112,9 +112,10 @@ class Character(models.Model):
     production = models.ForeignKey(Production, verbose_name='公演',
         on_delete=models.CASCADE)
     name = models.CharField('役名', max_length=50)
-    short_name = models.CharField('短縮名', max_length=5, null=True)
+    short_name = models.CharField('短縮名', max_length=5, blank=True)
     cast = models.ForeignKey(Actor, verbose_name='配役',
-        on_delete=models.CASCADE)
+        on_delete=models.SET_NULL, blank=True, null=True)
+    sortkey = models.IntegerField('順番', default=0)
     
     class Meta:
         verbose_name = verbose_name_plural = '登場人物'

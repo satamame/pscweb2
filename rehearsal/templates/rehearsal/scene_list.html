@@ -7,14 +7,15 @@
 {% endif %}
 <table>
     <tr>
+        <th>順番</th>
         <th>シーン名</th>
         <th>完成度</th>
         <th>優先度</th>
         <th>メモ</th>
-        <th>ソートキー</th>
     </tr>
     {% for item in object_list %}
     <tr>
+        <td>{{ item.sortkey }}</td>
         <td>
             <a href="{% url 'rehearsal:scn_detail' pk=item.id %}">
             {{ item.name }}</a>
@@ -22,7 +23,6 @@
         <td>{{ item.progress }}</td>
         <td>{{ item.priority }}</td>
         <td>{{ item.note }}</td>
-        <td>{{ item.sortkey }}</td>
     </tr>
     {% endfor %}
 </table>
