@@ -1,13 +1,15 @@
 from django.shortcuts import render
 from django.views.generic import ListView, TemplateView, DetailView
 from django.views.generic.edit import CreateView, UpdateView
+from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from production.models import Production, ProdUser
-from .models import Rehearsal, Scene, Place, Facility, Character, Actor
-from .forms import RhslForm, ScnForm, ChrForm, ActrForm
+from .models import Rehearsal, Scene, Place, Facility, Character, Actor,\
+    Appearance
+from .forms import RhslForm, ScnForm, ChrForm, ActrForm, ApprForm
 
 
 def accessing_prod_user(view, prod_id=None):
@@ -79,7 +81,7 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
             raise
         
         return super().post(request, *args, **kwargs)
-
+    
     def form_invalid(self, form):
         ''' バリデーションに失敗した時
         '''
@@ -225,7 +227,7 @@ class RhslCreate(ProdBaseCreateView):
         # 追加する rehearsal の production として、取っておいた属性をセット
         new_rhsl.production = self.production
         
-        messages.success(self.request, str(form.instance) + " を作成しました。")
+        messages.success(self.request, str(form.instance) + " を追加しました。")
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -320,7 +322,7 @@ class ScnCreate(ProdBaseCreateView):
         new_scn.production = self.production
         
         messages.success(self.request, str(form.instance)
-            + " を作成しました。")
+            + " を追加しました。")
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -360,6 +362,17 @@ class ScnDetail(ProdBaseDetailView):
     '''Scene の詳細ビュー
     '''
     model = Scene
+    
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+
+        # このシーンの出番のリスト
+        apprs = Appearance.objects.filter(scene=self.get_object())
+        context['apprs'] = apprs
+        
+        return context
 
 
 class ChrList(ProdBaseListView):
@@ -412,7 +425,7 @@ class ChrCreate(ProdBaseCreateView):
         new_chr.production = self.production
         
         messages.success(self.request, str(form.instance)
-            + " を作成しました。")
+            + " を追加しました。")
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -504,7 +517,7 @@ class ActrCreate(ProdBaseCreateView):
         new_actr.production = self.production
         
         messages.success(self.request, str(form.instance)
-            + " を作成しました。")
+            + " を追加しました。")
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -544,3 +557,189 @@ class ActrDetail(ProdBaseDetailView):
     '''Actor の詳細ビュー
     '''
     model = Actor
+
+
+class ScnApprCreate(LoginRequiredMixin, CreateView):
+    '''シーン詳細から Appearance を追加する時のビュー
+
+    Template 名: appearance_form (default)
+    '''
+    model = Appearance
+    form_class = ApprForm
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # scene を view の属性として持っておく
+        # パーミッションも検査される
+        try:
+            self.get_scn_from_request()
+        except:
+            raise
+        
+        return super().get(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+        
+        context['scene'] = self.scene
+        
+        # その公演の登場人物のみ表示するようにする
+        characters = Character.objects.filter(
+            production=self.scene.production)
+        # 選択肢を作成
+        choices = [('', '---------')]
+        choices.extend([(c.id, str(c)) for c in characters])
+        # Form にセット (選択肢以外の値はエラーにしてくれる)
+        context['form'].fields['character'].choices = choices
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # scene を view の属性として持っておく
+        # パーミッションも検査される
+        try:
+            self.get_scn_from_request()
+        except:
+            raise
+        
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        ''' バリデーションを通った時
+        '''
+        # 保存しようとするレコードを取得する
+        new_appr = form.save(commit=False)
+        
+        # 追加する appearance の scene として、取っておいた属性をセット
+        new_appr.scene = self.scene
+        
+        messages.success(self.request, str(form.instance) + " を追加しました。")
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        '''バリデーションに成功した時の遷移先を動的に与える
+        '''
+        scn_id = self.scene.id
+        url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
+        return url
+    
+    def form_invalid(self, form):
+        ''' バリデーションに失敗した時
+        '''
+        messages.warning(self.request, "作成できませんでした。")
+        return super().form_invalid(form)
+    
+    def get_scn_from_request(self):
+        '''リクエストから scene を取得し保持する
+        
+        アクセス権がなければ PermissionDenied を返す
+        '''
+        # アクセス情報からシーンを取得し、持っておく
+        scenes = Scene.objects.filter(pk=self.kwargs['scn_id'])
+        if len(scenes) < 1:
+            raise Http404
+        self.scene = scenes[0]
+        
+        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        prod_id = self.scene.production.id
+        prod_user = accessing_prod_user(self, prod_id=prod_id)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # 所有権または編集権を持っていなければアクセス権エラー
+        if not (prod_user.is_owner or prod_user.is_editor):
+            raise PermissionDenied
+
+
+class ScnApprUpdate(LoginRequiredMixin, UpdateView):
+    '''シーン詳細から Appearance を更新する時のビュー
+
+    Template 名: appearance_form (default)
+    '''
+    model = Appearance
+    form_class = ApprForm
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # scene を view の属性として持っておく
+        # パーミッションも検査される
+        try:
+            self.get_scn_from_object()
+        except:
+            raise
+        
+        return super().get(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+        
+        context['scene'] = self.scene
+        
+        # その公演の登場人物のみ表示するようにする
+        characters = Character.objects.filter(
+            production=self.scene.production)
+        # 選択肢を作成
+        choices = [('', '---------')]
+        choices.extend([(c.id, str(c)) for c in characters])
+        # Form にセット (選択肢以外の値はエラーにしてくれる)
+        context['form'].fields['character'].choices = choices
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # scene を view の属性として持っておく
+        # パーミッションも検査される
+        try:
+            self.get_scn_from_object()
+        except:
+            raise
+        
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        ''' バリデーションを通った時
+        '''
+        messages.success(self.request, str(form.instance)
+            + " を更新しました。")
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        '''バリデーションに成功した時の遷移先を動的に与える
+        '''
+        scn_id = self.scene.id
+        url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
+        return url
+    
+    def form_invalid(self, form):
+        ''' バリデーションに失敗した時
+        '''
+        messages.warning(self.request, "更新できませんでした。")
+        return super().form_invalid(form)
+
+    def get_scn_from_object(self):
+        '''オブジェクトからシーンを取得し保持する
+        
+        アクセス権がなければ PermissionDenied を返す
+        '''
+        # オブジェクトからシーンを取得し、持っておく
+        self.scene = self.get_object().scene
+        
+        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        prod_id = self.scene.production.id
+        prod_user = accessing_prod_user(self, prod_id=prod_id)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # 所有権または編集権を持っていなければアクセス権エラー
+        if not (prod_user.is_owner or prod_user.is_editor):
+            raise PermissionDenied

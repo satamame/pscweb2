@@ -5,7 +5,9 @@
 シーンの詳細
 </h1>
 {% if view.prod_user.is_owner or view.prod_user.is_editor %}
-<div align="right"><a href="{% url 'rehearsal:scn_update' pk=object.id %}" class="changelink">編集</a></div>
+<div align="right">
+    <a href="{% url 'rehearsal:scn_update' pk=object.id %}" class="changelink">編集</a>
+</div>
 {% endif %}
 <table>
     <tr><th>公演</th><td>{{ object.production }}</td></tr>
@@ -16,5 +18,30 @@
     <tr><th>完成度</th><td>{{ object.progress }}</td></tr>
     <tr><th>優先度</th><td>{{ object.priority }}</td></tr>
     <tr><th>メモ</th><td>{{ object.note }}</td></tr>
+</table>
+
+<div style="margin-top: 20px;">
+<div style="float: left; width: 60%; font-weight: bold;">出番</div>
+{% if view.prod_user.is_owner or view.prod_user.is_editor %}
+<div align="right">
+    <a href="{% url 'rehearsal:scn_appr_create' scn_id=object.id %}" class="addlink">追加</a>
+</div>
+{% endif %}
+</div>
+
+<table style="clear: both;">
+    <tr><th>登場人物</th><th>セリフ数</th></tr>
+    {% for appr in apprs%}
+    <tr>
+    <td>{{ appr.character }}</td><td>
+    {% if appr.lines_auto %}自動{% else %}{{ appr.lines_num}}{% endif %}
+    </td>
+    {% if view.prod_user.is_owner or view.prod_user.is_editor %}
+    <td>
+        <a href="{% url 'rehearsal:scn_appr_update' pk=appr.id %}" class="changelink">編集</a>
+    </td>
+    {% endif %}
+    </tr>
+    {% endfor %}
 </table>
 {% endblock %}

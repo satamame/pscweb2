@@ -55,4 +55,11 @@ urlpatterns = [
     # /rhsl/actr_detail/1/ -> Actor #1 Detail
     path('actr_detail/<int:pk>/', views.ActrDetail.as_view(),
         name='actr_detail'),
+
+    # /rhsl/scn_appr_create/1/ -> Appearance Create for Scene #1
+    path('scn_appr_create/<int:scn_id>/', views.ScnApprCreate.as_view(),
+        name='scn_appr_create'),
+    # /rhsl/scn_appr_update/1/ -> Appearance #1 Update from Scene Detail
+    path('scn_appr_update/<int:pk>/', views.ScnApprUpdate.as_view(),
+        name='scn_appr_update'),
 ]

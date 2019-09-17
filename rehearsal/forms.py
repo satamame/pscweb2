@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.admin.widgets import AdminDateWidget, AdminTimeWidget
 from production.models import Production
-from .models import Rehearsal, Scene, Character, Actor
+from .models import Rehearsal, Scene, Character, Actor, Appearance
 
 
 class RhslForm(forms.ModelForm):
@@ -50,3 +50,10 @@ class ActrForm(forms.ModelForm):
     class Meta:
         model = Actor
         fields = ('name', 'short_name')
+
+class ApprForm(forms.ModelForm):
+    '''出番の追加・更新フォーム
+    '''
+    class Meta:
+        model = Appearance
+        fields = ('character', 'lines_num', 'lines_auto')
