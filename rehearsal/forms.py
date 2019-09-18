@@ -51,9 +51,22 @@ class ActrForm(forms.ModelForm):
         model = Actor
         fields = ('name', 'short_name')
 
-class ApprForm(forms.ModelForm):
-    '''出番の追加・更新フォーム
+
+class ScnApprForm(forms.ModelForm):
+    '''シーンへの出番の追加フォーム
+    
+    TODO: 同じ人の出番を同じシーンに追加できないようにする
     '''
     class Meta:
         model = Appearance
         fields = ('character', 'lines_num', 'lines_auto')
+
+
+class ApprUpdateForm(forms.ModelForm):
+    '''出番の更新フォーム
+    
+    TODO: 同じ人の出番を同じシーンに追加できないようにする
+    '''
+    class Meta:
+        model = Appearance
+        fields = ('lines_num', 'lines_auto')

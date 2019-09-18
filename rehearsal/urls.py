@@ -59,7 +59,7 @@ urlpatterns = [
     # /rhsl/scn_appr_create/1/ -> Appearance Create for Scene #1
     path('scn_appr_create/<int:scn_id>/', views.ScnApprCreate.as_view(),
         name='scn_appr_create'),
-    # /rhsl/scn_appr_update/1/ -> Appearance #1 Update from Scene Detail
-    path('scn_appr_update/<int:pk>/', views.ScnApprUpdate.as_view(),
-        name='scn_appr_update'),
+    # /rhsl/appr_update/1/{scn|chr}/ -> Appearance #1 Update
+    path('appr_update/<int:pk>/<slug:from>/', views.ApprUpdate.as_view(),
+        name='appr_update'),
 ]

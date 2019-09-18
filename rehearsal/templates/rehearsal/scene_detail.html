@@ -34,11 +34,11 @@
     {% for appr in apprs%}
     <tr>
     <td>{{ appr.character }}</td><td>
-    {% if appr.lines_auto %}自動{% else %}{{ appr.lines_num}}{% endif %}
+    {% if appr.lines_auto %}自動{% else %}{{ appr.lines_num }}{% endif %}
     </td>
     {% if view.prod_user.is_owner or view.prod_user.is_editor %}
     <td>
-        <a href="{% url 'rehearsal:scn_appr_update' pk=appr.id %}" class="changelink">編集</a>
+        <a href="{% url 'rehearsal:appr_update' pk=appr.id from='scn' %}" class="changelink">編集</a>
     </td>
     {% endif %}
     </tr>

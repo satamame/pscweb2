@@ -9,7 +9,8 @@ from django.core.exceptions import PermissionDenied
 from production.models import Production, ProdUser
 from .models import Rehearsal, Scene, Place, Facility, Character, Actor,\
     Appearance
-from .forms import RhslForm, ScnForm, ChrForm, ActrForm, ApprForm
+from .forms import RhslForm, ScnForm, ChrForm, ActrForm, ScnApprForm,\
+    ApprUpdateForm
 
 
 def accessing_prod_user(view, prod_id=None):
@@ -565,15 +566,15 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
     Template 名: appearance_form (default)
     '''
     model = Appearance
-    form_class = ApprForm
+    form_class = ScnApprForm
     
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # scene を view の属性として持っておく
+        # production, scene を view の属性として持っておく
         # パーミッションも検査される
         try:
-            self.get_scn_from_request()
+            self.get_fixtures_from_request()
         except:
             raise
         
@@ -583,8 +584,6 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         '''テンプレートに渡すパラメタを改変する
         '''
         context = super().get_context_data(**kwargs)
-        
-        context['scene'] = self.scene
         
         # その公演の登場人物のみ表示するようにする
         characters = Character.objects.filter(
@@ -600,10 +599,10 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
-        # scene を view の属性として持っておく
+        # production, scene を view の属性として持っておく
         # パーミッションも検査される
         try:
-            self.get_scn_from_request()
+            self.get_fixtures_from_request()
         except:
             raise
         
@@ -634,16 +633,17 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         messages.warning(self.request, "作成できませんでした。")
         return super().form_invalid(form)
     
-    def get_scn_from_request(self):
-        '''リクエストから scene を取得し保持する
+    def get_fixtures_from_request(self):
+        '''リクエストから production, scene を取得し保持する
         
         アクセス権がなければ PermissionDenied を返す
         '''
-        # アクセス情報からシーンを取得し、持っておく
+        # アクセス情報から production, scene を取得し、持っておく
         scenes = Scene.objects.filter(pk=self.kwargs['scn_id'])
         if len(scenes) < 1:
             raise Http404
         self.scene = scenes[0]
+        self.production = self.scene.production
         
         # アクセス情報から公演ユーザを取得しパーミッション検査する
         prod_id = self.scene.production.id
@@ -656,51 +656,33 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
             raise PermissionDenied
 
 
-class ScnApprUpdate(LoginRequiredMixin, UpdateView):
-    '''シーン詳細から Appearance を更新する時のビュー
+class ApprUpdate(LoginRequiredMixin, UpdateView):
+    '''Appearance を更新する時のビュー
 
     Template 名: appearance_form (default)
     '''
     model = Appearance
-    form_class = ApprForm
+    form_class = ApprUpdateForm
     
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # scene を view の属性として持っておく
+        # production, scene, character を view の属性として持っておく
         # パーミッションも検査される
         try:
-            self.get_scn_from_object()
+            self.get_fixtures_from_object()
         except:
             raise
         
         return super().get(request, *args, **kwargs)
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
-        '''
-        context = super().get_context_data(**kwargs)
-        
-        context['scene'] = self.scene
-        
-        # その公演の登場人物のみ表示するようにする
-        characters = Character.objects.filter(
-            production=self.scene.production)
-        # 選択肢を作成
-        choices = [('', '---------')]
-        choices.extend([(c.id, str(c)) for c in characters])
-        # Form にセット (選択肢以外の値はエラーにしてくれる)
-        context['form'].fields['character'].choices = choices
-        
-        return context
-    
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
-        # scene を view の属性として持っておく
+        # production, scene, character を view の属性として持っておく
         # パーミッションも検査される
         try:
-            self.get_scn_from_object()
+            self.get_fixtures_from_object()
         except:
             raise
         
@@ -716,8 +698,18 @@ class ScnApprUpdate(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         '''バリデーションに成功した時の遷移先を動的に与える
         '''
-        scn_id = self.scene.id
-        url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
+        pageFrom = self.kwargs['from']
+        
+        if pageFrom == 'scn':
+            scn_id = self.scene.id
+            url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
+        elif pageFrom == 'chr':
+            chr_id = self.character.id
+            url = reverse_lazy('rehearsal:chr_detail', kwargs={'pk': chr_id})
+        else:
+            prod_id = self.production.id
+            url = reverse_lazy('rehearsal:rhsl_top', kwargs={'prod_id': prod_id})
+        
         return url
     
     def form_invalid(self, form):
@@ -726,13 +718,15 @@ class ScnApprUpdate(LoginRequiredMixin, UpdateView):
         messages.warning(self.request, "更新できませんでした。")
         return super().form_invalid(form)
 
-    def get_scn_from_object(self):
-        '''オブジェクトからシーンを取得し保持する
+    def get_fixtures_from_object(self):
+        '''オブジェクトから production, scene, character を取得し保持する
         
         アクセス権がなければ PermissionDenied を返す
         '''
-        # オブジェクトからシーンを取得し、持っておく
+        # オブジェクトから production, scene, character を取得し、持っておく
         self.scene = self.get_object().scene
+        self.production = self.scene.production
+        self.character = self.get_object().character
         
         # アクセス情報から公演ユーザを取得しパーミッション検査する
         prod_id = self.scene.production.id
