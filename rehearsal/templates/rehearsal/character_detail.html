@@ -14,4 +14,29 @@
     <tr><th>順番</th><td>{{ object.sortkey }}</td></tr>
     <tr><th>配役</th><td>{{ object.cast }}</td></tr>
 </table>
+
+<div style="margin-top: 20px;">
+<div style="float: left; width: 60%; font-weight: bold;">出番</div>
+{% if view.prod_user.is_owner or view.prod_user.is_editor %}
+<div align="right">
+    <a href="{% url 'rehearsal:chr_appr_create' chr_id=object.id %}" class="addlink">追加</a>
+</div>
+{% endif %}
+</div>
+
+<table style="clear: both;">
+    <tr><th>シーン</th><th>セリフ数</th></tr>
+    {% for appr in apprs%}
+    <tr>
+    <td>{{ appr.scene }}</td><td>
+    {% if appr.lines_auto %}自動{% else %}{{ appr.lines_num }}{% endif %}
+    </td>
+    {% if view.prod_user.is_owner or view.prod_user.is_editor %}
+    <td>
+        <a href="{% url 'rehearsal:appr_update' pk=appr.id from='chr' %}" class="changelink">編集</a>
+    </td>
+    {% endif %}
+    </tr>
+    {% endfor %}
+</table>
 {% endblock %}

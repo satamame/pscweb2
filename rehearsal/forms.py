@@ -54,18 +54,52 @@ class ActrForm(forms.ModelForm):
 
 class ScnApprForm(forms.ModelForm):
     '''シーンへの出番の追加フォーム
-    
-    TODO: 同じ人の出番を同じシーンに追加できないようにする
     '''
     class Meta:
         model = Appearance
         fields = ('character', 'lines_num', 'lines_auto')
+    
+    def __init__(self, *args, **kwargs):
+        # view で追加したパラメタを抜き取る
+        self.scene = kwargs.pop('scene')
+        super().__init__(*args, **kwargs)
+    
+    def clean_character(self):
+        '''同じ登場人物を追加していないことのバリデーション
+        '''
+        character = self.cleaned_data['character']
+        dupe = Appearance.objects.filter(scene=self.scene, character=character)
+        if len(dupe) > 0:
+            raise forms.ValidationError(
+                'その人物はすでに登場しています。')
+        return character
+
+
+class ChrApprForm(forms.ModelForm):
+    '''登場人物への出番の追加フォーム
+    '''
+    class Meta:
+        model = Appearance
+        fields = ('scene', 'lines_num', 'lines_auto')
+    
+    def __init__(self, *args, **kwargs):
+        # view で追加したパラメタを抜き取る
+        self.character = kwargs.pop('character')
+        super().__init__(*args, **kwargs)
+    
+    def clean_scene(self):
+        '''同じシーンを追加していないことのバリデーション
+        '''
+        scene = self.cleaned_data['scene']
+        dupe = Appearance.objects.filter(scene=scene, character=self.character)
+        if len(dupe) > 0:
+            raise forms.ValidationError(
+                'そのシーンにはすでに登場しています。')
+        return scene
 
 
 class ApprUpdateForm(forms.ModelForm):
     '''出番の更新フォーム
-    
-    TODO: 同じ人の出番を同じシーンに追加できないようにする
     '''
     class Meta:
         model = Appearance

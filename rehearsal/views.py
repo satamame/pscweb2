@@ -10,7 +10,7 @@ from production.models import Production, ProdUser
 from .models import Rehearsal, Scene, Place, Facility, Character, Actor,\
     Appearance
 from .forms import RhslForm, ScnForm, ChrForm, ActrForm, ScnApprForm,\
-    ApprUpdateForm
+    ChrApprForm, ApprUpdateForm
 
 
 def accessing_prod_user(view, prod_id=None):
@@ -82,6 +82,18 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
             raise
         
         return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        ''' バリデーションを通った時
+        '''
+        # 保存しようとするレコードを取得する
+        instance = form.save(commit=False)
+        
+        # 追加するレコードの production として、取っておいた属性をセット
+        instance.production = self.production
+        
+        messages.success(self.request, str(instance) + " を追加しました。")
+        return super().form_valid(form)
     
     def form_invalid(self, form):
         ''' バリデーションに失敗した時
@@ -219,18 +231,6 @@ class RhslCreate(ProdBaseCreateView):
         
         return context
     
-    def form_valid(self, form):
-        ''' バリデーションを通った時
-        '''
-        # 保存しようとするレコードを取得する
-        new_rhsl = form.save(commit=False)
-        
-        # 追加する rehearsal の production として、取っておいた属性をセット
-        new_rhsl.production = self.production
-        
-        messages.success(self.request, str(form.instance) + " を追加しました。")
-        return super().form_valid(form)
-
     def get_success_url(self):
         '''バリデーションに成功した時の遷移先を動的に与える
         '''
@@ -313,19 +313,6 @@ class ScnCreate(ProdBaseCreateView):
         
         return context
     
-    def form_valid(self, form):
-        ''' バリデーションを通った時
-        '''
-        # 保存しようとするレコードを取得する
-        new_scn = form.save(commit=False)
-        
-        # 追加する scene の production として、取っておいた属性をセット
-        new_scn.production = self.production
-        
-        messages.success(self.request, str(form.instance)
-            + " を追加しました。")
-        return super().form_valid(form)
-
     def get_success_url(self):
         '''バリデーションに成功した時の遷移先を動的に与える
         '''
@@ -416,19 +403,6 @@ class ChrCreate(ProdBaseCreateView):
         
         return context
     
-    def form_valid(self, form):
-        ''' バリデーションを通った時
-        '''
-        # 保存しようとするレコードを取得する
-        new_chr = form.save(commit=False)
-        
-        # 追加する character の production として、取っておいた属性をセット
-        new_chr.production = self.production
-        
-        messages.success(self.request, str(form.instance)
-            + " を追加しました。")
-        return super().form_valid(form)
-
     def get_success_url(self):
         '''バリデーションに成功した時の遷移先を動的に与える
         '''
@@ -474,6 +448,17 @@ class ChrDetail(ProdBaseDetailView):
     '''Character の詳細ビュー
     '''
     model = Character
+    
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+
+        # このシーンの出番のリスト
+        apprs = Appearance.objects.filter(character=self.get_object())
+        context['apprs'] = apprs
+        
+        return context
 
 
 class ActrList(ProdBaseListView):
@@ -507,20 +492,7 @@ class ActrCreate(ProdBaseCreateView):
         context['production'] = self.production
         
         return context
-
-    def form_valid(self, form):
-        ''' バリデーションを通った時
-        '''
-        # 保存しようとするレコードを取得する
-        new_actr = form.save(commit=False)
-        
-        # 追加する actor の production として、取っておいた属性をセット
-        new_actr.production = self.production
-        
-        messages.success(self.request, str(form.instance)
-            + " を追加しました。")
-        return super().form_valid(form)
-
+    
     def get_success_url(self):
         '''バリデーションに成功した時の遷移先を動的に与える
         '''
@@ -596,6 +568,13 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         
         return context
     
+    def get_form_kwargs(self):
+        '''フォームに渡す情報を改変する
+        '''
+        kwargs = super().get_form_kwargs()
+        kwargs['scene'] = self.scene
+        return kwargs
+    
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
@@ -617,7 +596,7 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         # 追加する appearance の scene として、取っておいた属性をセット
         new_appr.scene = self.scene
         
-        messages.success(self.request, str(form.instance) + " を追加しました。")
+        messages.success(self.request, str(new_appr) + " を追加しました。")
         return super().form_valid(form)
     
     def get_success_url(self):
@@ -646,7 +625,110 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         self.production = self.scene.production
         
         # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_id = self.scene.production.id
+        prod_id = self.production.id
+        prod_user = accessing_prod_user(self, prod_id=prod_id)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # 所有権または編集権を持っていなければアクセス権エラー
+        if not (prod_user.is_owner or prod_user.is_editor):
+            raise PermissionDenied
+
+
+class ChrApprCreate(LoginRequiredMixin, CreateView):
+    '''登場人物詳細から Appearance を追加する時のビュー
+
+    Template 名: appearance_form (default)
+    '''
+    model = Appearance
+    form_class = ChrApprForm
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # production, character を view の属性として持っておく
+        # パーミッションも検査される
+        try:
+            self.get_fixtures_from_request()
+        except:
+            raise
+        
+        return super().get(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+        
+        # その公演のシーンのみ表示するようにする
+        scenes = Scene.objects.filter(
+            production=self.character.production)
+        # 選択肢を作成
+        choices = [('', '---------')]
+        choices.extend([(s.id, str(s)) for s in scenes])
+        # Form にセット (選択肢以外の値はエラーにしてくれる)
+        context['form'].fields['scene'].choices = choices
+        
+        return context
+    
+    def get_form_kwargs(self):
+        '''フォームに渡す情報を改変する
+        '''
+        kwargs = super().get_form_kwargs()
+        kwargs['character'] = self.character
+        return kwargs
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # production, character を view の属性として持っておく
+        # パーミッションも検査される
+        try:
+            self.get_fixtures_from_request()
+        except:
+            raise
+        
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        ''' バリデーションを通った時
+        '''
+        # 保存しようとするレコードを取得する
+        new_appr = form.save(commit=False)
+        
+        # 追加する appearance の character として、取っておいた属性をセット
+        new_appr.character = self.character
+        
+        messages.success(self.request, str(new_appr) + " を追加しました。")
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        '''バリデーションに成功した時の遷移先を動的に与える
+        '''
+        chr_id = self.character.id
+        url = reverse_lazy('rehearsal:chr_detail', kwargs={'pk': chr_id})
+        return url
+    
+    def form_invalid(self, form):
+        ''' バリデーションに失敗した時
+        '''
+        messages.warning(self.request, "作成できませんでした。")
+        return super().form_invalid(form)
+    
+    def get_fixtures_from_request(self):
+        '''リクエストから production, character を取得し保持する
+        
+        アクセス権がなければ PermissionDenied を返す
+        '''
+        # アクセス情報から production, scene を取得し、持っておく
+        characters = Character.objects.filter(pk=self.kwargs['chr_id'])
+        if len(characters) < 1:
+            raise Http404
+        self.character = characters[0]
+        self.production = self.character.production
+        
+        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        prod_id = self.production.id
         prod_user = accessing_prod_user(self, prod_id=prod_id)
         if not prod_user:
             raise PermissionDenied

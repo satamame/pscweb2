@@ -21,7 +21,7 @@
             {{ item.name }}</a>
         </td>
         <td>{{ item.progress }}</td>
-        <td>{{ item.priority }}</td>
+        <td>{{ item.get_priority_display }}</td>
         <td>{{ item.note }}</td>
     </tr>
     {% endfor %}

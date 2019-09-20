@@ -59,6 +59,9 @@ urlpatterns = [
     # /rhsl/scn_appr_create/1/ -> Appearance Create for Scene #1
     path('scn_appr_create/<int:scn_id>/', views.ScnApprCreate.as_view(),
         name='scn_appr_create'),
+    # /rhsl/chr_appr_create/1/ -> Appearance Create for Character #1
+    path('chr_appr_create/<int:chr_id>/', views.ChrApprCreate.as_view(),
+        name='chr_appr_create'),
     # /rhsl/appr_update/1/{scn|chr}/ -> Appearance #1 Update
     path('appr_update/<int:pk>/<slug:from>/', views.ApprUpdate.as_view(),
         name='appr_update'),
