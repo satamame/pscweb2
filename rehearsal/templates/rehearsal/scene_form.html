@@ -1,13 +1,21 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>
+<h1 style="margin: 0px;">
 {% if object %}
+<a href="{% url 'rehearsal:scn_detail' pk=object.id %}">◀</a>
 シーンの編集
 {% else %}
 シーンの追加
 {% endif %}
 </h1>
+
+{% if object %}
+<div align="right"><a href="{% url 'rehearsal:scn_delete' pk=object.id %}" class="deletelink">削除</a></div>
+{% else %}
+<div>&nbsp;</div>
+{% endif %}
+
 <form method="post">
     {% csrf_token %}
     <table>

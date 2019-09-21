@@ -19,6 +19,9 @@ urlpatterns = [
     # /rhsl/rhsl_detail/1/ -> Rehearsal #1 Detail
     path('rhsl_detail/<int:pk>/', views.RhslDetail.as_view(),
         name='rhsl_detail'),
+    # /rhsl/rhsl_delete/1/ -> Rehearsal #1 Delete
+    path('rhsl_delete/<int:pk>/', views.RhslDelete.as_view(),
+        name='rhsl_delete'),
     
     # /rhsl/scn_list/1/ -> Scene List for Production #1
     path('scn_list/<int:prod_id>/', views.ScnList.as_view(), name='scn_list'),
@@ -31,6 +34,9 @@ urlpatterns = [
     # /rhsl/scn_detail/1/ -> Scene #1 Detail
     path('scn_detail/<int:pk>/', views.ScnDetail.as_view(),
         name='scn_detail'),
+    # /rhsl/scn_delete/1/ -> Scene #1 Delete
+    path('scn_delete/<int:pk>/', views.ScnDelete.as_view(),
+        name='scn_delete'),
 
     # /rhsl/chr_list/1/ -> Character List for Production #1
     path('chr_list/<int:prod_id>/', views.ChrList.as_view(), name='chr_list'),
@@ -43,6 +49,9 @@ urlpatterns = [
     # /rhsl/chr_detail/1/ -> Character #1 Detail
     path('chr_detail/<int:pk>/', views.ChrDetail.as_view(),
         name='chr_detail'),
+    # /rhsl/chr_delete/1/ -> Character #1 Delete
+    path('chr_delete/<int:pk>/', views.ChrDelete.as_view(),
+        name='chr_delete'),
 
     # /rhsl/actr_list/1/ -> Actor List for Production #1
     path('actr_list/<int:prod_id>/', views.ActrList.as_view(), name='actr_list'),
@@ -55,6 +64,9 @@ urlpatterns = [
     # /rhsl/actr_detail/1/ -> Actor #1 Detail
     path('actr_detail/<int:pk>/', views.ActrDetail.as_view(),
         name='actr_detail'),
+    # /rhsl/actr_delete/1/ -> Actor #1 Delete
+    path('actr_delete/<int:pk>/', views.ActrDelete.as_view(),
+        name='actr_delete'),
 
     # /rhsl/scn_appr_create/1/ -> Appearance Create for Scene #1
     path('scn_appr_create/<int:scn_id>/', views.ScnApprCreate.as_view(),

@@ -121,8 +121,12 @@ class Character(models.Model):
         verbose_name = verbose_name_plural = '登場人物'
     
     def __str__(self):
-        # ex. '沙悟浄 (三橋亮太)'
-        return '{} ({})'.format(self.name, self.cast)
+        # ex. '沙悟浄 (三橋)'
+        if self.cast:
+            if self.cast.short_name:
+                return '{} ({})'.format(self.name, self.cast.short_name)
+            return '{} ({})'.format(self.name, self.cast.name[:3])
+        return self.name
 
 
 class Attendance(models.Model):

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="margin: 0px;">
+<a href="{% url 'rehearsal:chr_detail' pk=object.id %}">◀</a>
+登場人物の削除
+</h1>
+
+<form method="post">{% csrf_token %}
+    <p>この登場人物を削除しますか？</p>
+    <input type="submit" value="削除する">
+    <input type="button" onclick="location.href='{% url 'rehearsal:chr_list' prod_id=object.production.id %}'" value="キャンセル">
+</form>
+
+<table>
+    <tr><th>公演</th><td>{{ object.production }}</td></tr>
+    <tr><th>役名</th><td>{{ object.name }}</td></tr>
+    <tr><th>短縮名</th><td>{{ object.short_name }}</td></tr>
+    <tr><th>順番</th><td>{{ object.sortkey }}</td></tr>
+    <tr><th>配役</th><td>{{ object.cast }}</td></tr>
+</table>
+{% endblock %}

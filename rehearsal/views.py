@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic import ListView, TemplateView, DetailView
-from django.views.generic.edit import CreateView, UpdateView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -71,6 +71,16 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
         
         return super().get(request, *args, **kwargs)
     
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+        
+        # リクエストから取った production をセット (表示用)
+        context['production'] = self.production
+        
+        return context
+    
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
@@ -96,7 +106,7 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
     
     def form_invalid(self, form):
-        ''' バリデーションに失敗した時
+        ''' 追加に失敗した時
         '''
         messages.warning(self.request, "作成できませんでした。")
         return super().form_invalid(form)
@@ -144,7 +154,7 @@ class ProdBaseUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        ''' バリデーションに失敗した時
+        ''' 更新に失敗した時
         '''
         messages.warning(self.request, "更新できませんでした。")
         return super().form_invalid(form)
@@ -167,6 +177,35 @@ class ProdBaseDetailView(LoginRequiredMixin, DetailView):
         self.prod_user = prod_user
         
         return super().get(request, *args, **kwargs)
+
+
+class ProdBaseDeleteView(LoginRequiredMixin, DeleteView):
+    '''アクセス権を検査する DeleteView の Base class
+    '''
+    template_name_suffix = '_delete'
+
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        prod_id = self.get_object().production.id
+        prod_user = accessing_prod_user(self, prod_id=prod_id)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # 所有権または編集権を持っていなければアクセス権エラー
+        if not (prod_user.is_owner or prod_user.is_editor):
+            raise PermissionDenied
+        
+        return super().get(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        '''削除した時のメッセージ
+        '''
+        result = super().delete(request, *args, **kwargs)
+        messages.success(
+            self.request, str(self.object) + " を削除しました。")
+        return result
 
 
 class RhslTop(LoginRequiredMixin, TemplateView):
@@ -213,10 +252,8 @@ class RhslCreate(ProdBaseCreateView):
     def get_context_data(self, **kwargs):
         '''テンプレートに渡すパラメタを改変する
         '''
+        # super で production はセットされる
         context = super().get_context_data(**kwargs)
-        
-        # リクエストから取った production をセット (表示用)
-        context['production'] = self.production
         
         # その公演の稽古場のみ表示するようにする
         # その公演の稽古施設
@@ -232,7 +269,7 @@ class RhslCreate(ProdBaseCreateView):
         return context
     
     def get_success_url(self):
-        '''バリデーションに成功した時の遷移先を動的に与える
+        '''追加に成功した時の遷移先を動的に与える
         '''
         prod_id = self.production.id
         url = reverse_lazy('rehearsal:rhsl_list', kwargs={'prod_id': prod_id})
@@ -268,7 +305,7 @@ class RhslUpdate(ProdBaseUpdateView):
         return context
     
     def get_success_url(self):
-        '''バリデーションに成功した時の遷移先を動的に与える
+        '''更新に成功した時の遷移先を動的に与える
         '''
         prod_id = self.get_object().production.id
         url = reverse_lazy('rehearsal:rhsl_list', kwargs={'prod_id': prod_id})
@@ -279,6 +316,19 @@ class RhslDetail(ProdBaseDetailView):
     '''Rehearsal の詳細ビュー
     '''
     model = Rehearsal
+
+
+class RhslDelete(ProdBaseDeleteView):
+    '''Rehearsal の削除ビュー
+    '''
+    model = Rehearsal
+    
+    def get_success_url(self):
+        '''削除に成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.get_object().production.id
+        url = reverse_lazy('rehearsal:rhsl_list', kwargs={'prod_id': prod_id})
+        return url
 
 
 class ScnList(ProdBaseListView):
@@ -303,18 +353,8 @@ class ScnCreate(ProdBaseCreateView):
     model = Scene
     form_class = ScnForm
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
-        '''
-        context = super().get_context_data(**kwargs)
-        
-        # リクエストから取った production をセット (表示用)
-        context['production'] = self.production
-        
-        return context
-    
     def get_success_url(self):
-        '''バリデーションに成功した時の遷移先を動的に与える
+        '''追加に成功した時の遷移先を動的に与える
         '''
         prod_id = self.production.id
         url = reverse_lazy('rehearsal:scn_list', kwargs={'prod_id': prod_id})
@@ -339,7 +379,7 @@ class ScnUpdate(ProdBaseUpdateView):
         return context
     
     def get_success_url(self):
-        '''バリデーションに成功した時の遷移先を動的に与える
+        '''更新に成功した時の遷移先を動的に与える
         '''
         prod_id = self.get_object().production.id
         url = reverse_lazy('rehearsal:scn_list', kwargs={'prod_id': prod_id})
@@ -362,6 +402,19 @@ class ScnDetail(ProdBaseDetailView):
         context['apprs'] = apprs
         
         return context
+
+
+class ScnDelete(ProdBaseDeleteView):
+    '''Scene の削除ビュー
+    '''
+    model = Scene
+    
+    def get_success_url(self):
+        '''削除に成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.get_object().production.id
+        url = reverse_lazy('rehearsal:scn_list', kwargs={'prod_id': prod_id})
+        return url
 
 
 class ChrList(ProdBaseListView):
@@ -389,10 +442,8 @@ class ChrCreate(ProdBaseCreateView):
     def get_context_data(self, **kwargs):
         '''テンプレートに渡すパラメタを改変する
         '''
+        # super で production はセットされる
         context = super().get_context_data(**kwargs)
-        
-        # リクエストから取った production をセット (表示用)
-        context['production'] = self.production
         
         # その公演の役者のみ表示するようにする
         actors = Actor.objects.filter(production=self.production)
@@ -405,7 +456,7 @@ class ChrCreate(ProdBaseCreateView):
         return context
     
     def get_success_url(self):
-        '''バリデーションに成功した時の遷移先を動的に与える
+        '''追加に成功した時の遷移先を動的に与える
         '''
         prod_id = self.production.id
         url = reverse_lazy('rehearsal:chr_list', kwargs={'prod_id': prod_id})
@@ -438,7 +489,7 @@ class ChrUpdate(ProdBaseUpdateView):
         return context
     
     def get_success_url(self):
-        '''バリデーションに成功した時の遷移先を動的に与える
+        '''更新に成功した時の遷移先を動的に与える
         '''
         prod_id = self.get_object().production.id
         url = reverse_lazy('rehearsal:chr_list', kwargs={'prod_id': prod_id})
@@ -463,6 +514,19 @@ class ChrDetail(ProdBaseDetailView):
         return context
 
 
+class ChrDelete(ProdBaseDeleteView):
+    '''Character の削除ビュー
+    '''
+    model = Character
+    
+    def get_success_url(self):
+        '''削除に成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.get_object().production.id
+        url = reverse_lazy('rehearsal:chr_list', kwargs={'prod_id': prod_id})
+        return url
+
+
 class ActrList(ProdBaseListView):
     '''Actor のリストビュー
 
@@ -485,18 +549,8 @@ class ActrCreate(ProdBaseCreateView):
     model = Actor
     form_class = ActrForm
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
-        '''
-        context = super().get_context_data(**kwargs)
-        
-        # リクエストから取った production をセット (表示用)
-        context['production'] = self.production
-        
-        return context
-    
     def get_success_url(self):
-        '''バリデーションに成功した時の遷移先を動的に与える
+        '''追加に成功した時の遷移先を動的に与える
         '''
         prod_id = self.production.id
         url = reverse_lazy('rehearsal:actr_list', kwargs={'prod_id': prod_id})
@@ -521,7 +575,7 @@ class ActrUpdate(ProdBaseUpdateView):
         return context
     
     def get_success_url(self):
-        '''バリデーションに成功した時の遷移先を動的に与える
+        '''更新に成功した時の遷移先を動的に与える
         '''
         prod_id = self.get_object().production.id
         url = reverse_lazy('rehearsal:actr_list', kwargs={'prod_id': prod_id})
@@ -532,6 +586,19 @@ class ActrDetail(ProdBaseDetailView):
     '''Actor の詳細ビュー
     '''
     model = Actor
+
+
+class ActrDelete(ProdBaseDeleteView):
+    '''Actor の削除ビュー
+    '''
+    model = Actor
+    
+    def get_success_url(self):
+        '''削除に成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.get_object().production.id
+        url = reverse_lazy('rehearsal:actr_list', kwargs={'prod_id': prod_id})
+        return url
 
 
 class ScnApprCreate(LoginRequiredMixin, CreateView):
@@ -602,16 +669,16 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
     
     def get_success_url(self):
-        '''バリデーションに成功した時の遷移先を動的に与える
+        '''追加に成功した時の遷移先を動的に与える
         '''
         scn_id = self.scene.id
         url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
         return url
     
     def form_invalid(self, form):
-        ''' バリデーションに失敗した時
+        ''' 追加に失敗した時
         '''
-        messages.warning(self.request, "作成できませんでした。")
+        messages.warning(self.request, "追加できませんでした。")
         return super().form_invalid(form)
     
     def get_fixtures_from_request(self):
@@ -705,16 +772,16 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
     
     def get_success_url(self):
-        '''バリデーションに成功した時の遷移先を動的に与える
+        '''追加に成功した時の遷移先を動的に与える
         '''
         chr_id = self.character.id
         url = reverse_lazy('rehearsal:chr_detail', kwargs={'pk': chr_id})
         return url
     
     def form_invalid(self, form):
-        ''' バリデーションに失敗した時
+        ''' 追加に失敗した時
         '''
-        messages.warning(self.request, "作成できませんでした。")
+        messages.warning(self.request, "追加できませんでした。")
         return super().form_invalid(form)
     
     def get_fixtures_from_request(self):
@@ -780,7 +847,7 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
     
     def get_success_url(self):
-        '''バリデーションに成功した時の遷移先を動的に与える
+        '''更新に成功した時の遷移先を動的に与える
         '''
         pageFrom = self.kwargs['from']
         

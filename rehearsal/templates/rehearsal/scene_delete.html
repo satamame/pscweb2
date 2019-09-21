@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="margin: 0px;">
+<a href="{% url 'rehearsal:scn_detail' pk=object.id %}">◀</a>
+シーンの削除
+</h1>
+
+<form method="post">{% csrf_token %}
+    <p>このシーンを削除しますか？</p>
+    <input type="submit" value="削除する">
+    <input type="button" onclick="location.href='{% url 'rehearsal:scn_list' prod_id=object.production.id %}'" value="キャンセル">
+</form>
+
+<table>
+    <tr><th>公演</th><td>{{ object.production }}</td></tr>
+    <tr><th>シーン名</th><td>{{ object.name }}</td></tr>
+    <tr><th>順番</th><td>{{ object.sortkey }}</td></tr>
+    <tr><th>長さ</th><td>{{ object.length }}</td></tr>
+    <tr><th>長さは適当</th><td>{{ object.length_auto }}</td></tr>
+    <tr><th>完成度</th><td>{{ object.progress }}</td></tr>
+    <tr><th>優先度</th><td>{{ object.get_priority_display }}</td></tr>
+    <tr><th>メモ</th><td>{{ object.note }}</td></tr>
+</table>
+{% endblock %}

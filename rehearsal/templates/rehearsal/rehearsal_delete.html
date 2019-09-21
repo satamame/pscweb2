@@ -2,15 +2,15 @@
 
 {% block content %}
 <h1 style="margin: 0px;">
-<a href="{% url 'rehearsal:rhsl_list' prod_id=object.production.id %}">◀</a>
-稽古の詳細
+<a href="{% url 'rehearsal:rhsl_detail' pk=object.id %}">◀</a>
+稽古の削除
 </h1>
 
-{% if view.prod_user.is_owner or view.prod_user.is_editor %}
-<div align="right"><a href="{% url 'rehearsal:rhsl_update' pk=object.id %}" class="changelink">編集</a></div>
-{% else %}
-<div>&nbsp;</div>
-{% endif %}
+<form method="post">{% csrf_token %}
+    <p>この稽古を削除しますか？</p>
+    <input type="submit" value="削除する">
+    <input type="button" onclick="location.href='{% url 'rehearsal:rhsl_list' prod_id=object.production.id %}'" value="キャンセル">
+</form>
 
 <table>
     <tr><th>公演</th><td>{{ object.production }}</td></tr>
