@@ -14,9 +14,9 @@
 
 <table>
     <tr><th>公演</th><td>{{ object.production }}</td></tr>
-    <tr><th>日付</th><td>{{ object.date }}</td></tr>
+    <tr><th>日付</th><td>{{ object.date|date:"Y年m月d日 (D)" }}</td></tr>
     <tr><th>場所</th><td>{{ object.place }}</td></tr>
     <tr><th>時間</th><td>{{ object.start_time }} - {{ object.end_time }}</td></tr>
-    <tr><th>メモ</th><td>{{ object.note }}</td></tr>
+    <tr><th>メモ</th><td>{{ object.note | urlize | linebreaksbr }}</td></tr>
 </table>
 {% endblock %}

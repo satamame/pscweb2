@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-from production.models import Production
+from production.models import Production, ProdUser
 
 
 class Facility(models.Model):
@@ -184,6 +184,8 @@ class ScnComment(models.Model):
     create_dt = models.DateTimeField('作成日時', auto_now_add=True)
     modify_dt = models.DateTimeField('変更日時', auto_now=True)
     comment = models.TextField('コメント')
+    mod_prod_user = models.ForeignKey(ProdUser, verbose_name='書いた人',
+        on_delete=models.SET_NULL, blank=True, null=True)
     
     class Meta:
         verbose_name = verbose_name_plural = 'シーンコメント'

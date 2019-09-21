@@ -24,7 +24,7 @@
     <tr>
         <td>
             <a href="{% url 'rehearsal:rhsl_detail' pk=item.id %}">
-            {{ item.date }}</a>
+            {{ item.date|date:"m/d(D)" }}</a>
         </td>
         <td>{{ item.start_time }}</td>
         <td>{{ item.end_time }}</td>

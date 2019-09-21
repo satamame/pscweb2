@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="margin: 0px;">
+{% if view.page_from == 'scn'%}
+<a href="{% url 'rehearsal:scn_detail' pk=object.scene.id %}">◀</a>
+{% elif view.page_from == 'chr'%}
+<a href="{% url 'rehearsal:chr_detail' pk=object.character.id %}">◀</a>
+{% else %}
+<a href="{% url 'rehearsal:rhsl_top' prod_id=object.scene.production.id %}">◀</a>
+{% endif %}
+出番の削除
+</h1>
+
+<form method="post">{% csrf_token %}
+    <p>この出番を削除しますか？</p>
+    <input type="submit" value="削除する">
+    {% if view.page_from == 'scn'%}
+    <input type="button" onclick="location.href='{% url 'rehearsal:scn_detail' pk=object.scene.id %}'" value="キャンセル">
+    {% elif view.page_from == 'chr'%}
+    <input type="button" onclick="location.href='{% url 'rehearsal:chr_detail' pk=object.character.id %}'" value="キャンセル">
+    {% else %}
+    <input type="button" onclick="location.href='{% url 'rehearsal:rhsl_top' prod_id=object.scene.production.id %}'" value="キャンセル">
+    {% endif %}
+</form>
+
+<table>
+    <tr><th>公演</th><td>{{ object.scene.production }}</td></tr>
+    <tr><th>シーン</th><td>{{ object.scene }}</td></tr>
+    <tr><th>登場人物</th><td>{{ object.character }}</td></tr>
+    <tr><th>セリフ数</th><td>{{ object.lines_num }}</td></tr>
+    <tr><th>セリフ数を決めない</th><td>{{ object.lines_auto }}</td></tr>
+</table>
+{% endblock %}

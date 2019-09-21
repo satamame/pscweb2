@@ -20,7 +20,7 @@
     <tr><th>長さは適当</th><td>{{ object.length_auto }}</td></tr>
     <tr><th>完成度</th><td>{{ object.progress }}</td></tr>
     <tr><th>優先度</th><td>{{ object.get_priority_display }}</td></tr>
-    <tr><th>メモ</th><td>{{ object.note }}</td></tr>
+    <tr><th>メモ</th><td>{{ object.note | urlize | linebreaksbr }}</td></tr>
 </table>
 
 <div style="margin-top: 20px;">
@@ -47,4 +47,25 @@
     </tr>
     {% endfor %}
 </table>
+
+<div style="margin-top: 20px;">
+<div style="float: left; width: 60%; font-weight: bold;">コメント</div>
+<div align="right">
+    <a href="" class="addlink">追加</a>
+</div>
+
+<table style="clear: both;">
+    {% for cmmt in cmmts%}
+    <tr>
+    <td>{{ cmmt.mod_prod_user.user }} {{ cmmt.modify_dt }}</td>
+    <td align="right">
+    {% if view.prod_user == cmmt.mod_prod_user %}
+        <a href="" class="changelink">編集</a>
+        <a href="" class="deletelink">削除</a>
+    {% endif %}
+    </td></tr>
+    <tr><td colspan="2" width="400">{{ cmmt.comment | urlize | linebreaksbr }}</td></tr>
+    {% endfor %}
+</table>
+
 {% endblock %}

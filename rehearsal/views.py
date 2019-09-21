@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from production.models import Production, ProdUser
 from .models import Rehearsal, Scene, Place, Facility, Character, Actor,\
-    Appearance
+    Appearance, ScnComment
 from .forms import RhslForm, ScnForm, ChrForm, ActrForm, ScnApprForm,\
     ChrApprForm, ApprUpdateForm
 
@@ -395,11 +395,16 @@ class ScnDetail(ProdBaseDetailView):
         '''テンプレートに渡すパラメタを改変する
         '''
         context = super().get_context_data(**kwargs)
-
+        
         # このシーンの出番のリスト
         apprs = Appearance.objects.filter(scene=self.get_object())\
             .order_by('character__sortkey')
         context['apprs'] = apprs
+        
+        # このシーンのコメントのリスト
+        cmmts = ScnComment.objects.filter(scene=self.get_object())\
+            .order_by('-create_dt')
+        context['cmmts'] = cmmts
         
         return context
 
@@ -821,7 +826,7 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
         # production, scene, character を view の属性として持っておく
         # パーミッションも検査される
         try:
-            self.get_fixtures_from_object()
+            self.get_fixtures()
         except:
             raise
         
@@ -833,7 +838,7 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
         # production, scene, character を view の属性として持っておく
         # パーミッションも検査される
         try:
-            self.get_fixtures_from_object()
+            self.get_fixtures()
         except:
             raise
         
@@ -869,11 +874,14 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
         messages.warning(self.request, "更新できませんでした。")
         return super().form_invalid(form)
 
-    def get_fixtures_from_object(self):
+    def get_fixtures(self):
         '''オブジェクトから production, scene, character を取得し保持する
         
         アクセス権がなければ PermissionDenied を返す
         '''
+        # リクエストから from パラメタを取得し page_from として保持する
+        self.page_from = self.kwargs['from']
+
         # オブジェクトから production, scene, character を取得し、持っておく
         self.scene = self.get_object().scene
         self.production = self.scene.production
@@ -881,6 +889,76 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
         
         # アクセス情報から公演ユーザを取得しパーミッション検査する
         prod_id = self.scene.production.id
+        prod_user = accessing_prod_user(self, prod_id=prod_id)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # 所有権または編集権を持っていなければアクセス権エラー
+        if not (prod_user.is_owner or prod_user.is_editor):
+            raise PermissionDenied
+
+
+class ApprDelete(LoginRequiredMixin, DeleteView):
+    '''Appearance の削除ビュー
+    '''
+    model = Appearance
+    template_name_suffix = '_delete'
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # production, page_from を view の属性として持っておく
+        # パーミッションも検査される
+        try:
+            self.get_fixtures()
+        except:
+            raise
+        
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # production, page_from を view の属性として持っておく
+        # パーミッションも検査される
+        try:
+            self.get_fixtures()
+        except:
+            raise
+        
+        return super().post(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        '''削除に成功した時の遷移先を動的に与える
+        '''
+        if self.page_from == 'scn':
+            scn_id = self.object.scene.id
+            url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
+        elif self.page_from == 'chr':
+            chr_id = self.object.character.id
+            url = reverse_lazy('rehearsal:chr_detail', kwargs={'pk': chr_id})
+        else:
+            prod_id = self.object.scene.production.id
+            url = reverse_lazy('rehearsal:rhsl_top', kwargs={'prod_id': prod_id})
+        
+        return url
+    
+    def delete(self, request, *args, **kwargs):
+        '''削除した時のメッセージ
+        '''
+        result = super().delete(request, *args, **kwargs)
+        messages.success(
+            self.request, str(self.object) + " を削除しました。")
+        return result
+    
+    def get_fixtures(self):
+        '''production, page_from を view の属性として持っておく
+        '''
+        self.page_from = self.kwargs['from']
+        self.production = self.get_object().scene.production
+        
+        # オブジェクトから公演ユーザを取得しパーミッション検査する
+        prod_id = self.production.id
         prod_user = accessing_prod_user(self, prod_id=prod_id)
         if not prod_user:
             raise PermissionDenied
