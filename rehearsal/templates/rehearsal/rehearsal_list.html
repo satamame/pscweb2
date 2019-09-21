@@ -1,10 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1 style="margin: 0px;">稽古一覧</h1>
+<h1 style="margin: 0;">
+<a href="{% url 'rehearsal:rhsl_top' prod_id=prod_id %}">⯇</a>
+稽古一覧
+</h1>
+
 {% if view.prod_user.is_owner or view.prod_user.is_editor %}
 <div align="right"><a href="{% url 'rehearsal:rhsl_create' prod_id=prod_id %}" class="addlink">追加</a></div>
+{% else %}
+<div>&nbsp;</div>
 {% endif %}
+
 <table>
     <tr>
         <th>日付</th>

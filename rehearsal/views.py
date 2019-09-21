@@ -182,8 +182,8 @@ class RhslTop(LoginRequiredMixin, TemplateView):
         if not prod_user:
             raise PermissionDenied
         
-        # prod_id を view の属性として持っておく
-        self.prod_id = prod_user.production.id
+        # production を view の属性として持っておく
+        self.production = prod_user.production
         
         return super().get(request, *args, **kwargs)
 
@@ -357,7 +357,8 @@ class ScnDetail(ProdBaseDetailView):
         context = super().get_context_data(**kwargs)
 
         # このシーンの出番のリスト
-        apprs = Appearance.objects.filter(scene=self.get_object())
+        apprs = Appearance.objects.filter(scene=self.get_object())\
+            .order_by('character__sortkey')
         context['apprs'] = apprs
         
         return context
@@ -454,8 +455,9 @@ class ChrDetail(ProdBaseDetailView):
         '''
         context = super().get_context_data(**kwargs)
 
-        # このシーンの出番のリスト
-        apprs = Appearance.objects.filter(character=self.get_object())
+        # この登場人物の出番のリスト
+        apprs = Appearance.objects.filter(character=self.get_object())\
+            .order_by('scene__sortkey')
         context['apprs'] = apprs
         
         return context
@@ -559,7 +561,7 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         
         # その公演の登場人物のみ表示するようにする
         characters = Character.objects.filter(
-            production=self.scene.production)
+            production=self.scene.production).order_by('sortkey')
         # 選択肢を作成
         choices = [('', '---------')]
         choices.extend([(c.id, str(c)) for c in characters])
@@ -662,7 +664,7 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
         
         # その公演のシーンのみ表示するようにする
         scenes = Scene.objects.filter(
-            production=self.character.production)
+            production=self.character.production).order_by('sortkey')
         # 選択肢を作成
         choices = [('', '---------')]
         choices.extend([(s.id, str(s)) for s in scenes])

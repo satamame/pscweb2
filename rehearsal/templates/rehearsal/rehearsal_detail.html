@@ -1,12 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>
+<h1 style="margin: 0px;">
+<a href="{% url 'rehearsal:rhsl_list' prod_id=object.production.id %}">⯇</a>
 稽古の詳細
 </h1>
+
 {% if view.prod_user.is_owner or view.prod_user.is_editor %}
 <div align="right"><a href="{% url 'rehearsal:rhsl_update' pk=object.id %}" class="changelink">編集</a></div>
+{% else %}
+<div>&nbsp;</div>
 {% endif %}
+
 <table>
     <tr><th>公演</th><td>{{ object.production }}</td></tr>
     <tr><th>日付</th><td>{{ object.date }}</td></tr>
