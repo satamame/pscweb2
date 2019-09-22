@@ -196,10 +196,10 @@ class ProdBaseDeleteView(LoginRequiredMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         '''削除した時のメッセージ
         '''
+        result = super().delete(request, *args, **kwargs)
         messages.success(
             self.request, str(self.object) + " を削除しました。")
-        
-        return super().delete(request, *args, **kwargs)
+        return result
 
 
 class RhslTop(LoginRequiredMixin, TemplateView):
