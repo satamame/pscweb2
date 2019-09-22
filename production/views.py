@@ -27,7 +27,7 @@ class ProdCreate(LoginRequiredMixin, CreateView):
     '''Production の追加ビュー
     '''
     model = Production
-    fields = ("name", )
+    fields = ('name', )
     template_name_suffix = '_create'
     success_url = reverse_lazy('production:prod_list')
     
@@ -38,11 +38,11 @@ class ProdCreate(LoginRequiredMixin, CreateView):
         new_prod = form.save(commit=True)
         
         # 自分を owner として公演ユーザに追加する
-        pu = ProdUser(production=new_prod, user=self.request.user,
+        prod_user = ProdUser(production=new_prod, user=self.request.user,
             is_owner=True)
-        pu.save()
+        prod_user.save()
         
-        messages.success(self.request, str(form.instance) + " を作成しました。")
+        messages.success(self.request, str(new_prod) + " を作成しました。")
         return super().form_valid(form)
     
     def form_invalid(self, form):

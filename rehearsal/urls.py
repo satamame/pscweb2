@@ -75,9 +75,9 @@ urlpatterns = [
     path('chr_appr_create/<int:chr_id>/', views.ChrApprCreate.as_view(),
         name='chr_appr_create'),
     # /rhsl/appr_update/1/{scn|chr}/ -> Appearance #1 Update
-    path('appr_update/<int:pk>/<slug:from>/', views.ApprUpdate.as_view(),
+    path('appr_update/<int:pk>/<str:from>/', views.ApprUpdate.as_view(),
         name='appr_update'),
     # /rhsl/appr_delete/1/{scn|chr}/ -> Appearance #1 Delete
-    path('appr_delete/<int:pk>/<slug:from>/', views.ApprDelete.as_view(),
+    path('appr_delete/<int:pk>/<str:from>/', views.ApprDelete.as_view(),
         name='appr_delete'),
 ]

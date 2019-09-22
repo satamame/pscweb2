@@ -19,8 +19,9 @@ def accessing_prod_user(view, prod_id=None):
     Parameters
     ----------
     view : View
+        アクセス情報の取得元の View
     prod_id : int
-        URLconf に prod_id が無い View から呼ぶ時に指定する
+        URLconf に prod_id が無い場合に指定する
     '''
     if not prod_id:
         prod_id=view.kwargs['prod_id']
@@ -35,15 +36,15 @@ class ProdBaseListView(LoginRequiredMixin, ListView):
     '''アクセス権を検査する ListView の Base class
     '''
     def get(self, request, *args, **kwargs):
-        '''表示時のリクエストを受けたハンドラ
+        '''表示時のリクエストを受けるハンドラ
         '''
         # アクセス情報から公演ユーザを取得しパーミッション検査する
         prod_user = accessing_prod_user(self)
         if not prod_user:
             raise PermissionDenied
         
-        # アクセス中の prod_user を view の属性として持っておく
-        # 新規作成の可否を知るため
+        # アクセス中の ProdUser を view の属性として持っておく
+        # テンプレートで追加ボタンの有無を決めるため
         self.prod_user = prod_user
         
         return super().get(request, *args, **kwargs)
@@ -52,7 +53,10 @@ class ProdBaseListView(LoginRequiredMixin, ListView):
         '''テンプレートに渡すパラメタを改変する
         '''
         context = super().get_context_data(**kwargs)
+        
+        # 戻るボタン, 追加ボタン用の prod_id をセット
         context['prod_id'] = self.kwargs['prod_id']
+        
         return context
 
 
@@ -62,44 +66,32 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
+        # パーミッション検査された公演ユーザ
+        prod_user = self.granted_prod_user()
+        
         # production を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_prod_from_request()
-        except:
-            raise
+        # テンプレートで固定要素として表示するため
+        self.production = prod_user.production
         
         return super().get(request, *args, **kwargs)
-    
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
-        '''
-        context = super().get_context_data(**kwargs)
-        
-        # リクエストから取った production をセット (表示用)
-        context['production'] = self.production
-        
-        return context
     
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
+        # パーミッション検査された公演ユーザ
+        prod_user = self.granted_prod_user()
+        
         # production を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_prod_from_request()
-        except:
-            raise
+        # 保存時にインスタンスにセットするため
+        self.production = prod_user.production
         
         return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
         ''' バリデーションを通った時
         '''
-        # 保存しようとするレコードを取得する
+        # 追加しようとするレコードの production をセット
         instance = form.save(commit=False)
-        
-        # 追加するレコードの production として、取っておいた属性をセット
         instance.production = self.production
         
         messages.success(self.request, str(instance) + " を追加しました。")
@@ -111,10 +103,10 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
         messages.warning(self.request, "作成できませんでした。")
         return super().form_invalid(form)
     
-    def get_prod_from_request(self):
-        '''リクエストから production を取得し保持する
+    def granted_prod_user(self):
+        '''パーミッション検査された公演ユーザを返す
         
-        アクセス権がなければ PermissionDenied を返す
+        所有権または編集権がなければ PermissionDenied を投げる
         '''
         # アクセス情報から公演ユーザを取得する
         prod_user = accessing_prod_user(self)
@@ -125,8 +117,7 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
         if not (prod_user.is_owner or prod_user.is_editor):
             raise PermissionDenied
         
-        # production を view の属性として持っておく
-        self.production = prod_user.production
+        return prod_user
 
 
 class ProdBaseUpdateView(LoginRequiredMixin, UpdateView):
@@ -135,9 +126,12 @@ class ProdBaseUpdateView(LoginRequiredMixin, UpdateView):
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_id = self.get_object().production.id
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
+        # production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.production = self.get_object().production
+        
+        # アクセス情報から公演ユーザを取得する
+        prod_user = accessing_prod_user(self, prod_id=self.production.id)
         if not prod_user:
             raise PermissionDenied
         
@@ -166,14 +160,14 @@ class ProdBaseDetailView(LoginRequiredMixin, DetailView):
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        # アクセス情報から公演ユーザを取得する
         prod_id = self.get_object().production.id
         prod_user = accessing_prod_user(self, prod_id=prod_id)
         if not prod_user:
             raise PermissionDenied
         
-        # アクセス中の prod_user を view の属性として持っておく
-        # 編集の可否を知るため
+        # アクセス中の ProdUser を view の属性として持っておく
+        # テンプレートで編集ボタンの有無を決めるため
         self.prod_user = prod_user
         
         return super().get(request, *args, **kwargs)
@@ -187,7 +181,7 @@ class ProdBaseDeleteView(LoginRequiredMixin, DeleteView):
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        # アクセス情報から公演ユーザを取得する
         prod_id = self.get_object().production.id
         prod_user = accessing_prod_user(self, prod_id=prod_id)
         if not prod_user:
@@ -202,10 +196,10 @@ class ProdBaseDeleteView(LoginRequiredMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         '''削除した時のメッセージ
         '''
-        result = super().delete(request, *args, **kwargs)
         messages.success(
             self.request, str(self.object) + " を削除しました。")
-        return result
+        
+        return super().delete(request, *args, **kwargs)
 
 
 class RhslTop(LoginRequiredMixin, TemplateView):
@@ -238,7 +232,6 @@ class RhslList(ProdBaseListView):
         '''リストに表示するレコードをフィルタする
         '''
         prod_id=self.kwargs['prod_id']
-        
         return Rehearsal.objects.filter(production__pk=prod_id)\
             .order_by('date', 'start_time')
 
@@ -287,13 +280,9 @@ class RhslUpdate(ProdBaseUpdateView):
         '''
         context = super().get_context_data(**kwargs)
         
-        # オブジェクトから取った production をセット (表示用)
-        production = self.get_object().production
-        context['production'] = production
-
         # その公演の稽古場のみ表示するようにする
         # その公演の稽古施設
-        facilities = Facility.objects.filter(production=production)
+        facilities = Facility.objects.filter(production=self.production)
         # その施設を含む稽古場
         places = Place.objects.filter(facility__in=facilities)
         # 選択肢を作成
@@ -307,7 +296,7 @@ class RhslUpdate(ProdBaseUpdateView):
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
         '''
-        prod_id = self.get_object().production.id
+        prod_id = self.object.production.id
         url = reverse_lazy('rehearsal:rhsl_list', kwargs={'prod_id': prod_id})
         return url
 
@@ -326,7 +315,7 @@ class RhslDelete(ProdBaseDeleteView):
     def get_success_url(self):
         '''削除に成功した時の遷移先を動的に与える
         '''
-        prod_id = self.get_object().production.id
+        prod_id = self.object.production.id
         url = reverse_lazy('rehearsal:rhsl_list', kwargs={'prod_id': prod_id})
         return url
 
@@ -342,7 +331,6 @@ class ScnList(ProdBaseListView):
         '''リストに表示するレコードをフィルタする
         '''
         prod_id=self.kwargs['prod_id']
-        
         return Scene.objects.filter(production__pk=prod_id)\
             .order_by('sortkey',)
 
@@ -367,21 +355,10 @@ class ScnUpdate(ProdBaseUpdateView):
     model = Scene
     form_class = ScnForm
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
-        '''
-        context = super().get_context_data(**kwargs)
-        
-        # オブジェクトから取った production をセット (表示用)
-        production = self.get_object().production
-        context['production'] = production
-        
-        return context
-    
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
         '''
-        prod_id = self.get_object().production.id
+        prod_id = self.object.production.id
         url = reverse_lazy('rehearsal:scn_list', kwargs={'prod_id': prod_id})
         return url
 
@@ -397,12 +374,13 @@ class ScnDetail(ProdBaseDetailView):
         context = super().get_context_data(**kwargs)
         
         # このシーンの出番のリスト
-        apprs = Appearance.objects.filter(scene=self.get_object())\
+        scene = self.get_object()
+        apprs = Appearance.objects.filter(scene=scene)\
             .order_by('character__sortkey')
         context['apprs'] = apprs
         
-        # このシーンのコメントのリスト
-        cmmts = ScnComment.objects.filter(scene=self.get_object())\
+        # このシーンのコメントのリスト (作成日の新しい順)
+        cmmts = ScnComment.objects.filter(scene=scene)\
             .order_by('-create_dt')
         context['cmmts'] = cmmts
         
@@ -417,7 +395,7 @@ class ScnDelete(ProdBaseDeleteView):
     def get_success_url(self):
         '''削除に成功した時の遷移先を動的に与える
         '''
-        prod_id = self.get_object().production.id
+        prod_id = self.object.production.id
         url = reverse_lazy('rehearsal:scn_list', kwargs={'prod_id': prod_id})
         return url
 
@@ -433,7 +411,6 @@ class ChrList(ProdBaseListView):
         '''リストに表示するレコードをフィルタする
         '''
         prod_id=self.kwargs['prod_id']
-        
         return Character.objects.filter(production__pk=prod_id)\
             .order_by('sortkey',)
 
@@ -479,12 +456,8 @@ class ChrUpdate(ProdBaseUpdateView):
         '''
         context = super().get_context_data(**kwargs)
         
-        # オブジェクトから取った production をセット (表示用)
-        production = self.get_object().production
-        context['production'] = production
-        
         # その公演の役者のみ表示するようにする
-        actors = Actor.objects.filter(production=production)
+        actors = Actor.objects.filter(production=self.production)
         # 選択肢を作成
         choices = [('', '---------')]
         choices.extend([(a.id, str(a)) for a in actors])
@@ -496,7 +469,7 @@ class ChrUpdate(ProdBaseUpdateView):
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
         '''
-        prod_id = self.get_object().production.id
+        prod_id = self.object.production.id
         url = reverse_lazy('rehearsal:chr_list', kwargs={'prod_id': prod_id})
         return url
 
@@ -527,7 +500,7 @@ class ChrDelete(ProdBaseDeleteView):
     def get_success_url(self):
         '''削除に成功した時の遷移先を動的に与える
         '''
-        prod_id = self.get_object().production.id
+        prod_id = self.object.production.id
         url = reverse_lazy('rehearsal:chr_list', kwargs={'prod_id': prod_id})
         return url
 
@@ -543,7 +516,6 @@ class ActrList(ProdBaseListView):
         '''リストに表示するレコードをフィルタする
         '''
         prod_id=self.kwargs['prod_id']
-        
         return Actor.objects.filter(production__pk=prod_id)\
             .order_by('name',)
 
@@ -568,21 +540,10 @@ class ActrUpdate(ProdBaseUpdateView):
     model = Actor
     form_class = ActrForm
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
-        '''
-        context = super().get_context_data(**kwargs)
-        
-        # オブジェクトから取った production をセット (表示用)
-        production = self.get_object().production
-        context['production'] = production
-        
-        return context
-    
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
         '''
-        prod_id = self.get_object().production.id
+        prod_id = self.object.production.id
         url = reverse_lazy('rehearsal:actr_list', kwargs={'prod_id': prod_id})
         return url
 
@@ -601,7 +562,7 @@ class ActrDelete(ProdBaseDeleteView):
     def get_success_url(self):
         '''削除に成功した時の遷移先を動的に与える
         '''
-        prod_id = self.get_object().production.id
+        prod_id = self.object.production.id
         url = reverse_lazy('rehearsal:actr_list', kwargs={'prod_id': prod_id})
         return url
 
@@ -617,12 +578,13 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # production, scene を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_fixtures_from_request()
-        except:
-            raise
+        # scene と production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.scene = self.get_scene_from_request()
+        self.production = self.scene.production
+        
+        # パーミッションを検査する
+        self.test_permission(self.production.id)
         
         return super().get(request, *args, **kwargs)
     
@@ -646,28 +608,29 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         '''フォームに渡す情報を改変する
         '''
         kwargs = super().get_form_kwargs()
+        
+        # フォーム側でバリデーションに使うので scene を渡す
         kwargs['scene'] = self.scene
+        
         return kwargs
     
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
-        # production, scene を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_fixtures_from_request()
-        except:
-            raise
+        # scene を view の属性として持っておく
+        # 保存時にインスタンスにセットするため
+        self.scene = self.get_scene_from_request()
+        
+        # パーミッションを検査する
+        self.test_permission(self.scene.production.id)
         
         return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
         ''' バリデーションを通った時
         '''
-        # 保存しようとするレコードを取得する
+        # 追加しようとする appearance の scene をセット
         new_appr = form.save(commit=False)
-        
-        # 追加する appearance の scene として、取っておいた属性をセット
         new_appr.scene = self.scene
         
         messages.success(self.request, str(new_appr) + " を追加しました。")
@@ -686,20 +649,21 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         messages.warning(self.request, "追加できませんでした。")
         return super().form_invalid(form)
     
-    def get_fixtures_from_request(self):
-        '''リクエストから production, scene を取得し保持する
+    def get_scene_from_request(self):
+        '''リクエストから scene を取得して返す
         
-        アクセス権がなければ PermissionDenied を返す
+        scene がなければ 404 エラーを投げる
         '''
-        # アクセス情報から production, scene を取得し、持っておく
         scenes = Scene.objects.filter(pk=self.kwargs['scn_id'])
         if len(scenes) < 1:
             raise Http404
-        self.scene = scenes[0]
-        self.production = self.scene.production
         
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_id = self.production.id
+        return scenes[0]
+    
+    def test_permission(self, prod_id):
+        '''パーミッションを検査する
+        '''
+        # アクセス情報から公演ユーザを取得する
         prod_user = accessing_prod_user(self, prod_id=prod_id)
         if not prod_user:
             raise PermissionDenied
@@ -720,12 +684,13 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # production, character を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_fixtures_from_request()
-        except:
-            raise
+        # character と production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.character = self.get_character_from_request()
+        self.production = self.character.production
+        
+        # パーミッションを検査する
+        self.test_permission(self.production.id)
         
         return super().get(request, *args, **kwargs)
     
@@ -749,28 +714,29 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
         '''フォームに渡す情報を改変する
         '''
         kwargs = super().get_form_kwargs()
+        
+        # フォーム側でバリデーションに使うので character を渡す
         kwargs['character'] = self.character
+        
         return kwargs
     
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
-        # production, character を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_fixtures_from_request()
-        except:
-            raise
+        # character を view の属性として持っておく
+        # 保存時にインスタンスにセットするため
+        self.character = self.get_character_from_request()
+        
+        # パーミッションを検査する
+        self.test_permission(self.character.production.id)
         
         return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
         ''' バリデーションを通った時
         '''
-        # 保存しようとするレコードを取得する
+        # 追加しようとする appearance の character をセット
         new_appr = form.save(commit=False)
-        
-        # 追加する appearance の character として、取っておいた属性をセット
         new_appr.character = self.character
         
         messages.success(self.request, str(new_appr) + " を追加しました。")
@@ -789,20 +755,21 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
         messages.warning(self.request, "追加できませんでした。")
         return super().form_invalid(form)
     
-    def get_fixtures_from_request(self):
-        '''リクエストから production, character を取得し保持する
+    def get_character_from_request(self):
+        '''リクエストから character を取得して返す
         
-        アクセス権がなければ PermissionDenied を返す
+        character がなければ 404 エラーを投げる
         '''
-        # アクセス情報から production, scene を取得し、持っておく
         characters = Character.objects.filter(pk=self.kwargs['chr_id'])
         if len(characters) < 1:
             raise Http404
-        self.character = characters[0]
-        self.production = self.character.production
         
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_id = self.production.id
+        return characters[0]
+    
+    def test_permission(self, prod_id):
+        '''パーミッションを検査する
+        '''
+        # アクセス情報から公演ユーザを取得する
         prod_user = accessing_prod_user(self, prod_id=prod_id)
         if not prod_user:
             raise PermissionDenied
@@ -823,25 +790,27 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # production, scene, character を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_fixtures()
-        except:
-            raise
+        # page_from を view の属性として持っておく
+        # テンプレートでリンクの URL を決めるため
+        self.page_from = self.kwargs['from']
+        
+        # scene, character, production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.scene = self.get_object().scene
+        self.character = self.get_object().character
+        self.production = self.scene.production
+        
+        # パーミッションを検査する
+        self.test_permission(self.production.id)
         
         return super().get(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
-        # production, scene, character を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_fixtures()
-        except:
-            raise
-        
+        # パーミッションを検査する
+        prod_id = self.get_object().scene.production.id
+        self.test_permission(prod_id)
         return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
@@ -854,16 +823,16 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
         '''
-        pageFrom = self.kwargs['from']
+        page_from = self.kwargs['from']
         
-        if pageFrom == 'scn':
-            scn_id = self.scene.id
+        if page_from == 'scn':
+            scn_id = self.object.scene.id
             url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
-        elif pageFrom == 'chr':
-            chr_id = self.character.id
+        elif page_from == 'chr':
+            chr_id = self.object.character.id
             url = reverse_lazy('rehearsal:chr_detail', kwargs={'pk': chr_id})
         else:
-            prod_id = self.production.id
+            prod_id = self.object.scene.production.id
             url = reverse_lazy('rehearsal:rhsl_top', kwargs={'prod_id': prod_id})
         
         return url
@@ -873,22 +842,11 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
         '''
         messages.warning(self.request, "更新できませんでした。")
         return super().form_invalid(form)
-
-    def get_fixtures(self):
-        '''オブジェクトから production, scene, character を取得し保持する
-        
-        アクセス権がなければ PermissionDenied を返す
+    
+    def test_permission(self, prod_id):
+        '''パーミッションを検査する
         '''
-        # リクエストから from パラメタを取得し page_from として保持する
-        self.page_from = self.kwargs['from']
-
-        # オブジェクトから production, scene, character を取得し、持っておく
-        self.scene = self.get_object().scene
-        self.production = self.scene.production
-        self.character = self.get_object().character
-        
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
-        prod_id = self.scene.production.id
+        # アクセス情報から公演ユーザを取得する
         prod_user = accessing_prod_user(self, prod_id=prod_id)
         if not prod_user:
             raise PermissionDenied
@@ -907,34 +865,37 @@ class ApprDelete(LoginRequiredMixin, DeleteView):
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # production, page_from を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_fixtures()
-        except:
-            raise
+        # page_from を view の属性として持っておく
+        # テンプレートでリンクの URL を決めるため
+        self.page_from = self.kwargs['from']
+
+        # production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.production = self.get_object().scene.production
+
+        # パーミッションを検査する
+        self.test_permission(self.production.id)
         
         return super().get(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
-        # production, page_from を view の属性として持っておく
-        # パーミッションも検査される
-        try:
-            self.get_fixtures()
-        except:
-            raise
+        # パーミッションを検査する
+        prod_id = self.get_object().scene.production.id
+        self.test_permission(prod_id)
         
         return super().post(request, *args, **kwargs)
     
     def get_success_url(self):
         '''削除に成功した時の遷移先を動的に与える
         '''
-        if self.page_from == 'scn':
+        page_from = self.kwargs['from']
+        
+        if page_from == 'scn':
             scn_id = self.object.scene.id
             url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
-        elif self.page_from == 'chr':
+        elif page_from == 'chr':
             chr_id = self.object.character.id
             url = reverse_lazy('rehearsal:chr_detail', kwargs={'pk': chr_id})
         else:
@@ -951,14 +912,10 @@ class ApprDelete(LoginRequiredMixin, DeleteView):
             self.request, str(self.object) + " を削除しました。")
         return result
     
-    def get_fixtures(self):
-        '''production, page_from を view の属性として持っておく
+    def test_permission(self, prod_id):
+        '''パーミッションを検査する
         '''
-        self.page_from = self.kwargs['from']
-        self.production = self.get_object().scene.production
-        
-        # オブジェクトから公演ユーザを取得しパーミッション検査する
-        prod_id = self.production.id
+        # アクセス情報から公演ユーザを取得する
         prod_user = accessing_prod_user(self, prod_id=prod_id)
         if not prod_user:
             raise PermissionDenied
