@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="margin: 0px;">
+<a href="{% url 'rehearsal:scn_detail' pk=object.scene.id %}">◀</a>
+コメントの削除
+</h1>
+
+<form method="post">{% csrf_token %}
+    <p>このコメントを削除しますか？</p>
+    <input type="submit" value="削除する">
+    <input type="button" onclick="location.href='{% url 'rehearsal:scn_detail' pk=object.scene.id %}'" value="キャンセル">
+</form>
+
+<table>
+    <tr><th><label>公演:</label></th><td>{{ object.scene.production }}</td></tr>
+    <tr><th><label>シーン:</label></th><td>{{ object.scene }}</td></tr>
+    <tr><th><label>記入者:</label></th><td>{{ object.mod_prod_user.user }}</td></tr>
+    <tr><th><label>作成日時:</label></th><td>{{ object.create_dt|date:"Y年m月d日(D) H:i:s" }}</td></tr>
+    <tr><th><label>変更日時:</label></th><td>{{ object.modify_dt|date:"Y年m月d日(D) H:i:s" }}</td></tr>
+    <tr><th><label>コメント:</label></th><td>{{ object.comment }}</td></tr>
+</table>
+{% endblock %}

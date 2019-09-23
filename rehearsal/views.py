@@ -9,8 +9,7 @@ from django.core.exceptions import PermissionDenied
 from production.models import Production, ProdUser
 from .models import Rehearsal, Scene, Place, Facility, Character, Actor,\
     Appearance, ScnComment
-from .forms import RhslForm, ScnForm, ChrForm, ActrForm, ScnApprForm,\
-    ChrApprForm, ApprUpdateForm
+from .forms import RhslForm, ScnApprForm, ChrApprForm
 
 
 def accessing_prod_user(view, prod_id=None):
@@ -45,7 +44,7 @@ def test_edit_permission(view, prod_id=None):
     if not prod_user:
         raise PermissionDenied
     
-    # 所有権または編集権を持っていなければアクセス権エラー
+    # 所有権または編集権を持っていなければアクセス拒否
     if not (prod_user.is_owner or prod_user.is_editor):
         raise PermissionDenied
     
@@ -108,7 +107,7 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
         return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
-        ''' バリデーションを通った時
+        '''バリデーションを通った時
         '''
         # 追加しようとするレコードの production をセット
         instance = form.save(commit=False)
@@ -118,9 +117,9 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
     
     def form_invalid(self, form):
-        ''' 追加に失敗した時
+        '''追加に失敗した時
         '''
-        messages.warning(self.request, "作成できませんでした。")
+        messages.warning(self.request, "追加できませんでした。")
         return super().form_invalid(form)
 
 
@@ -140,13 +139,13 @@ class ProdBaseUpdateView(LoginRequiredMixin, UpdateView):
         return super().get(request, *args, **kwargs)
     
     def form_valid(self, form):
-        ''' バリデーションを通った時
+        '''バリデーションを通った時
         '''
         messages.success(self.request, str(form.instance) + " を更新しました。")
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        ''' 更新に失敗した時
+        '''更新に失敗した時
         '''
         messages.warning(self.request, "更新できませんでした。")
         return super().form_invalid(form)
@@ -330,7 +329,8 @@ class ScnCreate(ProdBaseCreateView):
     '''Scene の追加ビュー
     '''
     model = Scene
-    form_class = ScnForm
+    fields = ('name', 'sortkey', 'length', 'length_auto', 'progress',
+        'priority', 'note')
     
     def get_success_url(self):
         '''追加に成功した時の遷移先を動的に与える
@@ -344,7 +344,8 @@ class ScnUpdate(ProdBaseUpdateView):
     '''Scene の更新ビュー
     '''
     model = Scene
-    form_class = ScnForm
+    fields = ('name', 'sortkey', 'length', 'length_auto', 'progress',
+        'priority', 'note')
     
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
@@ -371,9 +372,9 @@ class ScnDetail(ProdBaseDetailView):
         context['apprs'] = apprs
         
         # このシーンのコメントのリスト (作成日の新しい順)
-        cmmts = ScnComment.objects.filter(scene=scene)\
+        cmts = ScnComment.objects.filter(scene=scene)\
             .order_by('-create_dt')
-        context['cmmts'] = cmmts
+        context['cmts'] = cmts
         
         return context
 
@@ -410,7 +411,7 @@ class ChrCreate(ProdBaseCreateView):
     '''Character の追加ビュー
     '''
     model = Character
-    form_class = ChrForm
+    fields = ('name', 'short_name', 'sortkey', 'cast')
     
     def get_context_data(self, **kwargs):
         '''テンプレートに渡すパラメタを改変する
@@ -440,7 +441,7 @@ class ChrUpdate(ProdBaseUpdateView):
     '''Character の更新ビュー
     '''
     model = Character
-    form_class = ChrForm
+    fields = ('name', 'short_name', 'sortkey', 'cast')
     
     def get_context_data(self, **kwargs):
         '''テンプレートに渡すパラメタを改変する
@@ -515,7 +516,7 @@ class ActrCreate(ProdBaseCreateView):
     '''Actor の追加ビュー
     '''
     model = Actor
-    form_class = ActrForm
+    fields = ('name', 'short_name')
     
     def get_success_url(self):
         '''追加に成功した時の遷移先を動的に与える
@@ -529,7 +530,7 @@ class ActrUpdate(ProdBaseUpdateView):
     '''Actor の更新ビュー
     '''
     model = Actor
-    form_class = ActrForm
+    fields = ('name', 'short_name')
     
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
@@ -618,7 +619,7 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
-        ''' バリデーションを通った時
+        '''バリデーションを通った時
         '''
         # 追加しようとする appearance の scene をセット
         new_appr = form.save(commit=False)
@@ -635,7 +636,7 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         return url
     
     def form_invalid(self, form):
-        ''' 追加に失敗した時
+        '''追加に失敗した時
         '''
         messages.warning(self.request, "追加できませんでした。")
         return super().form_invalid(form)
@@ -712,7 +713,7 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
         return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
-        ''' バリデーションを通った時
+        '''バリデーションを通った時
         '''
         # 追加しようとする appearance の character をセット
         new_appr = form.save(commit=False)
@@ -729,7 +730,7 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
         return url
     
     def form_invalid(self, form):
-        ''' 追加に失敗した時
+        '''追加に失敗した時
         '''
         messages.warning(self.request, "追加できませんでした。")
         return super().form_invalid(form)
@@ -752,7 +753,7 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
     Template 名: appearance_form (default)
     '''
     model = Appearance
-    form_class = ApprUpdateForm
+    fields = ('lines_num', 'lines_auto')
     
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
@@ -781,7 +782,7 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
         return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
-        ''' バリデーションを通った時
+        '''バリデーションを通った時
         '''
         messages.success(self.request, str(form.instance)
             + " を更新しました。")
@@ -805,7 +806,7 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
         return url
     
     def form_invalid(self, form):
-        ''' バリデーションに失敗した時
+        '''更新に失敗した時
         '''
         messages.warning(self.request, "更新できませんでした。")
         return super().form_invalid(form)
@@ -865,3 +866,221 @@ class ApprDelete(LoginRequiredMixin, DeleteView):
         messages.success(
             self.request, str(self.object) + " を削除しました。")
         return result
+
+
+class ScnCmtCreate(LoginRequiredMixin, CreateView):
+    '''シーン詳細から ScnComment を追加する時のビュー
+
+    Template 名: scn_comment_form (default)
+    '''
+    model = ScnComment
+    fields = ('comment',)
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # scene と production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.scene = self.get_scene_from_request()
+        self.production = self.scene.production
+        
+        # アクセス情報から公演ユーザを取得しアクセス権を検査する
+        # 編集権は不要
+        prod_user = accessing_prod_user(self, self.production.id)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # アクセス中の ProdUser を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.prod_user = prod_user
+        
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # scene を view の属性として持っておく
+        # 保存時にインスタンスにセットするため
+        self.scene = self.get_scene_from_request()
+        
+        # アクセス情報から公演ユーザを取得しアクセス権を検査する
+        # 編集権は不要
+        prod_user = accessing_prod_user(self, self.scene.production.id)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # prod_user を view の属性として持っておく
+        # 保存時にインスタンスにセットするため
+        self.prod_user = prod_user
+        
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        '''バリデーションを通った時
+        '''
+        # 追加しようとする ScnComment の scene, mod_prod_user をセット
+        new_cmt = form.save(commit=False)
+        new_cmt.scene = self.scene
+        new_cmt.mod_prod_user = self.prod_user
+        new_cmt.save()
+        
+        messages.success(self.request, str(new_cmt) + " を追加しました。")
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        '''追加に成功した時の遷移先を動的に与える
+        '''
+        scn_id = self.scene.id
+        url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
+        return url
+    
+    def form_invalid(self, form):
+        '''追加に失敗した時
+        '''
+        messages.warning(self.request, "追加できませんでした。")
+        return super().form_invalid(form)
+    
+    def get_scene_from_request(self):
+        '''リクエストから scene を取得して返す
+        
+        scene がなければ 404 エラーを投げる
+        '''
+        scenes = Scene.objects.filter(pk=self.kwargs['scn_id'])
+        if len(scenes) < 1:
+            raise Http404
+        
+        return scenes[0]
+
+
+class ScnCmtUpdate(LoginRequiredMixin, UpdateView):
+    '''シーン詳細から ScnComment を更新する時のビュー
+
+    Template 名: scn_comment_form (default)
+    '''
+    model = ScnComment
+    fields = ('comment',)
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # コメントの編集権を検査してアクセス中の公演ユーザを取得する
+        # テンプレートで固定要素として表示するため
+        self.prod_user = self.test_cmt_permission()
+        
+        # scene と production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.scene = self.get_object().scene
+        self.production = self.scene.production
+        
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # コメントの編集権を検査してアクセス中の公演ユーザを取得する
+        # 保存時にインスタンスにセットするため
+        self.prod_user = self.test_cmt_permission()
+        
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        '''バリデーションを通った時
+        '''
+        # 追加しようとする ScnComment の mod_prod_user をセット
+        new_cmt = form.save(commit=False)
+        new_cmt.mod_prod_user = self.prod_user
+        new_cmt.save()
+        
+        messages.success(self.request, str(new_cmt) + " を更新しました。")
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        '''追加に成功した時の遷移先を動的に与える
+        '''
+        scn_id = self.object.scene.id
+        url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
+        return url
+    
+    def form_invalid(self, form):
+        '''更新に失敗した時
+        '''
+        messages.warning(self.request, "更新できませんでした。")
+        return super().form_invalid(form)
+    
+    def test_cmt_permission(self):
+        '''コメントの編集権を検査する
+        '''
+        scn_cmt = self.get_object()
+        
+        # アクセス情報から公演ユーザを取得しアクセス権を検査する
+        prod_user = accessing_prod_user(self, scn_cmt.scene.production.id)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # 所有権も編集権なく、記入者でもない場合はアクセス拒否
+        if not(prod_user.is_owner or prod_user.is_editor
+                or prod_user == scn_cmt.mod_prod_user):
+            raise PermissionDenied
+        
+        return prod_user
+
+
+class ScnCmtDelete(LoginRequiredMixin, DeleteView):
+    '''ScnComment の削除ビュー
+    '''
+    model = ScnComment
+    template_name_suffix = '_delete'
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # コメントの編集権を検査してアクセス中の公演ユーザを取得する
+        # テンプレートで固定要素として表示するため
+        self.prod_user = self.test_cmt_permission()
+        
+        # scene と production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.scene = self.get_object().scene
+        self.production = self.scene.production
+        
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # コメントの編集権を検査する
+        self.test_cmt_permission()
+        
+        return super().post(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        '''追加に成功した時の遷移先を動的に与える
+        '''
+        scn_id = self.object.scene.id
+        url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
+        return url
+    
+    def delete(self, request, *args, **kwargs):
+        '''削除した時のメッセージ
+        '''
+        result = super().delete(request, *args, **kwargs)
+        messages.success(
+            self.request, str(self.object) + " を削除しました。")
+        return result
+    
+    def test_cmt_permission(self):
+        '''コメントの編集権を検査する
+        '''
+        scn_cmt = self.get_object()
+        
+        # アクセス情報から公演ユーザを取得しアクセス権を検査する
+        prod_user = accessing_prod_user(self, scn_cmt.scene.production.id)
+        if not prod_user:
+            raise PermissionDenied
+        
+        # 所有権も編集権なく、記入者でもない場合はアクセス拒否
+        if not(prod_user.is_owner or prod_user.is_editor
+                or prod_user == scn_cmt.mod_prod_user):
+            raise PermissionDenied
+        
+        return prod_user

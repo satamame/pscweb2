@@ -51,20 +51,23 @@
 <div style="margin-top: 20px;">
 <div style="float: left; width: 60%; font-weight: bold;">コメント</div>
 <div align="right">
-    <a href="" class="addlink">追加</a>
+    <a href="{% url 'rehearsal:scn_cmt_create' scn_id=object.id %}" class="addlink">追加</a>
+</div>
 </div>
 
 <table style="clear: both;">
-    {% for cmmt in cmmts%}
+    {% for cmt in cmts%}
     <tr>
-    <td>{{ cmmt.mod_prod_user.user }} {{ cmmt.modify_dt }}</td>
+    <td style="color: lightslategray;">{{ cmt.mod_prod_user.user }} {{ cmt.modify_dt|date:"Y年m月d日(D) H:i:s" }}</td>
     <td align="right">
-    {% if view.prod_user == cmmt.mod_prod_user %}
-        <a href="" class="changelink">編集</a>
-        <a href="" class="deletelink">削除</a>
+    {% if view.prod_user.is_owner or view.prod_user.is_editor or view.prod_user == cmt.mod_prod_user %}
+        <a href="{% url 'rehearsal:scn_cmt_update' pk=cmt.id %}" class="changelink">編集</a>
+        <a href="{% url 'rehearsal:scn_cmt_delete' pk=cmt.id %}" class="deletelink">削除</a>
     {% endif %}
     </td></tr>
-    <tr><td colspan="2" width="400">{{ cmmt.comment | urlize | linebreaksbr }}</td></tr>
+    <tr><td colspan="2" width="500" style="padding-bottom: 20px;">
+        {{ cmt.comment | urlize | linebreaksbr }}
+    </td></tr>
     {% endfor %}
 </table>
 

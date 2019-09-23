@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.admin.widgets import AdminDateWidget, AdminTimeWidget
 from production.models import Production
-from .models import Rehearsal, Scene, Character, Actor, Appearance
+from .models import Rehearsal, Scene, Character, Actor, Appearance, ScnComment
 
 
 class RhslForm(forms.ModelForm):
@@ -25,31 +25,6 @@ class RhslForm(forms.ModelForm):
             raise forms.ValidationError(
                 '終了時刻は開始時刻より遅くしてください。')
         return end_time
-
-
-class ScnForm(forms.ModelForm):
-    '''シーンの追加・更新フォーム
-    '''
-    class Meta:
-        model = Scene
-        fields = ('name', 'sortkey', 'length', 'length_auto', 'progress',
-            'priority', 'note')
-
-
-class ChrForm(forms.ModelForm):
-    '''登場人物の追加・更新フォーム
-    '''
-    class Meta:
-        model = Character
-        fields = ('name', 'short_name', 'sortkey', 'cast')
-
-
-class ActrForm(forms.ModelForm):
-    '''役者の追加・更新フォーム
-    '''
-    class Meta:
-        model = Actor
-        fields = ('name', 'short_name')
 
 
 class ScnApprForm(forms.ModelForm):
@@ -96,11 +71,3 @@ class ChrApprForm(forms.ModelForm):
             raise forms.ValidationError(
                 'そのシーンにはすでに登場しています。')
         return scene
-
-
-class ApprUpdateForm(forms.ModelForm):
-    '''出番の更新フォーム
-    '''
-    class Meta:
-        model = Appearance
-        fields = ('lines_num', 'lines_auto')

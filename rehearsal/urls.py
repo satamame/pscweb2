@@ -80,4 +80,14 @@ urlpatterns = [
     # /rhsl/appr_delete/1/{scn|chr}/ -> Appearance #1 Delete
     path('appr_delete/<int:pk>/<str:from>/', views.ApprDelete.as_view(),
         name='appr_delete'),
+
+    # /rhsl/scn_cmt_create/1/ -> ScnComment Create for Scene #1
+    path('scn_cmt_create/<int:scn_id>/', views.ScnCmtCreate.as_view(),
+        name='scn_cmt_create'),
+    # /rhsl/scn_cmt_update/1/ -> ScnComment #1 Update
+    path('scn_cmt_update/<int:pk>/', views.ScnCmtUpdate.as_view(),
+        name='scn_cmt_update'),
+    # /rhsl/scn_cmt_delete/1/ -> ScnComment #1 Delete
+    path('scn_cmt_delete/<int:pk>/', views.ScnCmtDelete.as_view(),
+        name='scn_cmt_delete'),
 ]

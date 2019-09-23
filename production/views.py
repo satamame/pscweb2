@@ -32,7 +32,7 @@ class ProdCreate(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('production:prod_list')
     
     def form_valid(self, form):
-        ''' バリデーションを通った時
+        '''バリデーションを通った時
         '''
         # 保存したレコードを取得する
         new_prod = form.save(commit=True)
@@ -46,7 +46,7 @@ class ProdCreate(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
     
     def form_invalid(self, form):
-        ''' バリデーションに失敗した時
+        '''追加に失敗した時
         '''
         messages.warning(self.request, "作成できませんでした。")
         return super().form_invalid(form)

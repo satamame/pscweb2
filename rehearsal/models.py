@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.utils import timezone
 from production.models import Production, ProdUser
 
 
@@ -184,8 +185,13 @@ class ScnComment(models.Model):
     create_dt = models.DateTimeField('作成日時', auto_now_add=True)
     modify_dt = models.DateTimeField('変更日時', auto_now=True)
     comment = models.TextField('コメント')
-    mod_prod_user = models.ForeignKey(ProdUser, verbose_name='書いた人',
+    mod_prod_user = models.ForeignKey(ProdUser, verbose_name='記入者',
         on_delete=models.SET_NULL, blank=True, null=True)
     
     class Meta:
         verbose_name = verbose_name_plural = 'シーンコメント'
+    
+    def __str__(self):
+        # ex. 'コメント by xx at xx:xx'
+        dt = timezone.localtime(self.modify_dt).strftime("%Y/%m/%d %H:%M:%S")
+        return 'コメント by {} at {}'.format(self.mod_prod_user.user, dt)
