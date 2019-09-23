@@ -32,13 +32,33 @@ def accessing_prod_user(view, prod_id=None):
     return prod_users[0]
 
 
+def test_edit_permission(view, prod_id=None):
+    '''編集権を検査する
+    
+    Returns
+    -------
+    prod_user : ProdUser
+        編集権を持っているアクセス中の ProdUser
+    '''
+    # アクセス情報から公演ユーザを取得する
+    prod_user = accessing_prod_user(view, prod_id=prod_id)
+    if not prod_user:
+        raise PermissionDenied
+    
+    # 所有権または編集権を持っていなければアクセス権エラー
+    if not (prod_user.is_owner or prod_user.is_editor):
+        raise PermissionDenied
+    
+    return prod_user
+
+
 class ProdBaseListView(LoginRequiredMixin, ListView):
     '''アクセス権を検査する ListView の Base class
     '''
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        # アクセス情報から公演ユーザを取得しアクセス権を検査する
         prod_user = accessing_prod_user(self)
         if not prod_user:
             raise PermissionDenied
@@ -66,8 +86,8 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # パーミッション検査された公演ユーザ
-        prod_user = self.granted_prod_user()
+        # 編集権を検査してアクセス中の公演ユーザを取得する
+        prod_user = test_edit_permission(self)
         
         # production を view の属性として持っておく
         # テンプレートで固定要素として表示するため
@@ -78,8 +98,8 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
-        # パーミッション検査された公演ユーザ
-        prod_user = self.granted_prod_user()
+        # 編集権を検査してアクセス中の公演ユーザを取得する
+        prod_user = test_edit_permission(self)
         
         # production を view の属性として持っておく
         # 保存時にインスタンスにセットするため
@@ -102,22 +122,6 @@ class ProdBaseCreateView(LoginRequiredMixin, CreateView):
         '''
         messages.warning(self.request, "作成できませんでした。")
         return super().form_invalid(form)
-    
-    def granted_prod_user(self):
-        '''パーミッション検査された公演ユーザを返す
-        
-        所有権または編集権がなければ PermissionDenied を投げる
-        '''
-        # アクセス情報から公演ユーザを取得する
-        prod_user = accessing_prod_user(self)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
-        
-        return prod_user
 
 
 class ProdBaseUpdateView(LoginRequiredMixin, UpdateView):
@@ -130,14 +134,8 @@ class ProdBaseUpdateView(LoginRequiredMixin, UpdateView):
         # テンプレートで固定要素として表示するため
         self.production = self.get_object().production
         
-        # アクセス情報から公演ユーザを取得する
-        prod_user = accessing_prod_user(self, prod_id=self.production.id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
+        # 編集権を検査する
+        test_edit_permission(self, self.production.id)
         
         return super().get(request, *args, **kwargs)
     
@@ -181,15 +179,8 @@ class ProdBaseDeleteView(LoginRequiredMixin, DeleteView):
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けるハンドラ
         '''
-        # アクセス情報から公演ユーザを取得する
-        prod_id = self.get_object().production.id
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
+        # 編集権を検査する
+        test_edit_permission(self, self.get_object().production.id)
         
         return super().get(request, *args, **kwargs)
     
@@ -210,7 +201,7 @@ class RhslTop(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         '''表示時のリクエストを受けたハンドラ
         '''
-        # アクセス情報から公演ユーザを取得しパーミッション検査する
+        # アクセス情報から公演ユーザを取得しアクセス権を検査する
         prod_user = accessing_prod_user(self)
         if not prod_user:
             raise PermissionDenied
@@ -583,8 +574,8 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         self.scene = self.get_scene_from_request()
         self.production = self.scene.production
         
-        # パーミッションを検査する
-        self.test_permission(self.production.id)
+        # 編集権を検査する
+        test_edit_permission(self, self.production.id)
         
         return super().get(request, *args, **kwargs)
     
@@ -621,8 +612,8 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         # 保存時にインスタンスにセットするため
         self.scene = self.get_scene_from_request()
         
-        # パーミッションを検査する
-        self.test_permission(self.scene.production.id)
+        # 編集権を検査する
+        test_edit_permission(self, self.scene.production.id)
         
         return super().post(request, *args, **kwargs)
     
@@ -659,18 +650,6 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
             raise Http404
         
         return scenes[0]
-    
-    def test_permission(self, prod_id):
-        '''パーミッションを検査する
-        '''
-        # アクセス情報から公演ユーザを取得する
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
 
 
 class ChrApprCreate(LoginRequiredMixin, CreateView):
@@ -689,8 +668,8 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
         self.character = self.get_character_from_request()
         self.production = self.character.production
         
-        # パーミッションを検査する
-        self.test_permission(self.production.id)
+        # 編集権を検査する
+        test_edit_permission(self, self.production.id)
         
         return super().get(request, *args, **kwargs)
     
@@ -727,8 +706,8 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
         # 保存時にインスタンスにセットするため
         self.character = self.get_character_from_request()
         
-        # パーミッションを検査する
-        self.test_permission(self.character.production.id)
+        # 編集権を検査する
+        test_edit_permission(self, self.character.production.id)
         
         return super().post(request, *args, **kwargs)
     
@@ -765,18 +744,6 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
             raise Http404
         
         return characters[0]
-    
-    def test_permission(self, prod_id):
-        '''パーミッションを検査する
-        '''
-        # アクセス情報から公演ユーザを取得する
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
 
 
 class ApprUpdate(LoginRequiredMixin, UpdateView):
@@ -800,17 +767,17 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
         self.character = self.get_object().character
         self.production = self.scene.production
         
-        # パーミッションを検査する
-        self.test_permission(self.production.id)
+        # 編集権を検査する
+        test_edit_permission(self, self.production.id)
         
         return super().get(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
-        # パーミッションを検査する
-        prod_id = self.get_object().scene.production.id
-        self.test_permission(prod_id)
+        # 編集権を検査する
+        test_edit_permission(self, self.get_object().scene.production.id)
+        
         return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
@@ -842,18 +809,6 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
         '''
         messages.warning(self.request, "更新できませんでした。")
         return super().form_invalid(form)
-    
-    def test_permission(self, prod_id):
-        '''パーミッションを検査する
-        '''
-        # アクセス情報から公演ユーザを取得する
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
 
 
 class ApprDelete(LoginRequiredMixin, DeleteView):
@@ -873,17 +828,16 @@ class ApprDelete(LoginRequiredMixin, DeleteView):
         # テンプレートで固定要素として表示するため
         self.production = self.get_object().scene.production
 
-        # パーミッションを検査する
-        self.test_permission(self.production.id)
+        # 編集権を検査する
+        test_edit_permission(self, self.production.id)
         
         return super().get(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
-        # パーミッションを検査する
-        prod_id = self.get_object().scene.production.id
-        self.test_permission(prod_id)
+        # 編集権を検査する
+        test_edit_permission(self, self.get_object().scene.production.id)
         
         return super().post(request, *args, **kwargs)
     
@@ -911,15 +865,3 @@ class ApprDelete(LoginRequiredMixin, DeleteView):
         messages.success(
             self.request, str(self.object) + " を削除しました。")
         return result
-    
-    def test_permission(self, prod_id):
-        '''パーミッションを検査する
-        '''
-        # アクセス情報から公演ユーザを取得する
-        prod_user = accessing_prod_user(self, prod_id=prod_id)
-        if not prod_user:
-            raise PermissionDenied
-        
-        # 所有権または編集権を持っていなければアクセス権エラー
-        if not (prod_user.is_owner or prod_user.is_editor):
-            raise PermissionDenied
