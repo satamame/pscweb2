@@ -1186,7 +1186,7 @@ class ApprTable(LoginRequiredMixin, TemplateView):
                     if cast == actr_idx:
                         lines_num += chr_apprs[chr_idx]
                 actr_apprs.append(lines_num)
-            scenes_cast_apprs.append(actr_apprs[:])
+            scenes_cast_apprs.append(actr_apprs)
         context['cast_apprs'] = json.dumps(scenes_cast_apprs)
         
         return context
