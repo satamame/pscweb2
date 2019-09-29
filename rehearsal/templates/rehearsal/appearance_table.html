@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 style="margin: 0;">
+<a href="{% url 'rehearsal:rhsl_top' prod_id=prod_id %}">◀</a>
+香盤表
+</h1>
+
+<p>
+シーン名 <input id="scn_keyword" type="text" />
+<input id="by_cast" type="checkbox"> 役者
+<input type="button" value="適用" onClick="draw();">
+<input type="button" value="リセット" onClick="init(); draw();">
+</p>
+
+<table style="border:1px solid #eee;">
+<thead id="t_header" style="display:block;"></thead>
+<tbody id="t_data" style="display:block; overflow-y:scroll;"></tbody>
+</table>
+{% endblock %}
+
+{% block head%}
+<style>
+.top_left_cell{ width:100px; padding:0; }
+.header_cell{ line-height: 1.1; width:30px; padding:5px; border:1px solid #eee; }
+.scn_name_cell{ width:100px; padding:0; background-color:aliceblue; border:1px solid #eee; }
+.scn_btn{ width:100%; height:100%; border:0; padding:2px; cursor:pointer; }
+.data_cell{ text-align:center; line-height:1.1; width:30px; padding:5px; border:1px solid #eee; }
+</style>
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript" src="{% static 'js/appearance_table.js' %}"></script>
+
+<script>
+// View からもらうデータ
+scenes = JSON.parse('{{ scenes|safe }}');
+chrs = JSON.parse('{{ characters|safe }}');
+chr_apprs = JSON.parse('{{ chr_apprs|safe }}');
+cast = JSON.parse('{{ cast|safe }}');
+cast_apprs = JSON.parse('{{ cast_apprs|safe }}');
+
+init();
+draw();
+</script>
+{% endblock %}

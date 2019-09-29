@@ -90,4 +90,9 @@ urlpatterns = [
     # /rhsl/scn_cmt_delete/1/ -> ScnComment #1 Delete
     path('scn_cmt_delete/<int:pk>/', views.ScnCmtDelete.as_view(),
         name='scn_cmt_delete'),
+    
+    # /rhsl/appr_table/1/ -> Appearance table for Production #1
+    path('appr_table/<int:prod_id>/', views.ApprTable.as_view(),
+        name='appr_table'),
+    
 ]

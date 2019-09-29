@@ -12,5 +12,7 @@
     登場人物一覧</a></li>
 <li><a href="{% url 'rehearsal:actr_list' prod_id=view.production.id %}">
     役者一覧</a></li>
+<li><a href="{% url 'rehearsal:appr_table' prod_id=view.production.id %}">
+    香盤表</a></li>
 </ul>
 {% endblock %}
