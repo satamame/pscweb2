@@ -167,7 +167,8 @@ function draw(){
                 + scn_idx + ");\">" + scene + "</button>";
             
             // シーン名のセル
-            tbody += "<tr><th class=\"scn_name_cell\">" + scn_btn + "</th>";
+            tbody += "<tr><th class=\"scn_name_cell\" style=\"background-color:"
+                + color + ";\">" + scn_btn + "</th>";
             
             appearance = scn_apprs[scn_idx];
             // セリフ数のセルをソート順に表示

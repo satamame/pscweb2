@@ -1142,11 +1142,15 @@ class ApprTable(LoginRequiredMixin, TemplateView):
             # 出番のある人だけのリスト
             valid_apprs = [appr for appr in chr_apprs if appr]
             appr_count = len(valid_apprs)
+            # セリフ数が「自動」でない人だけのリスト
+            line_num_apprs = [appr for appr in valid_apprs if not appr.lines_auto]
             # シーン内のセリフ数の合計
-            lines_sum = sum([appr.lines_num for appr in valid_apprs if not appr.lines_auto])
-            # 誰か出ていればセリフ数の平均を取っておく
-            if appr_count > 0:
-                mean = lines_sum / appr_count
+            lines_sum = sum([appr.lines_num for appr in line_num_apprs])
+            # セリフ数が自動でない人がいればセリフ数の平均を取っておく
+            if len(line_num_apprs) > 0:
+                mean = lines_sum / len(line_num_apprs)
+            else:
+                mean = 1
             
             # このシーンのセリフ数のリスト
             scn_apprs = []
