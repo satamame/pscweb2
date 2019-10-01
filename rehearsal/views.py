@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from production.models import Production, ProdUser
 from .models import Rehearsal, Scene, Place, Facility, Character, Actor,\
-    Appearance, ScnComment
+    Appearance, ScnComment, Attendance
 from .forms import RhslForm, ScnApprForm, ChrApprForm
 
 
@@ -545,6 +545,29 @@ class ActrDetail(ProdBaseDetailView):
     '''Actor の詳細ビュー
     '''
     model = Actor
+    
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+
+        # 稽古のコマのリスト
+        rhsls = Rehearsal.objects.all().order_by('date', 'start_time')
+        
+        # 各コマの (稽古情報とこの役者の参加時間のリスト) のリスト
+        atnds = []
+        for i, rhsl in enumerate(rhsls):
+            atnd = {}
+            atnd['rhsl'] = rhsl
+            # 稽古のコマごとに、参加時間のリストを作る
+            slots = Attendance.objects.filter(actor=self.get_object(),
+                rehearsal=rhsl).order_by('from_time')
+            atnd['slots'] = slots
+            atnds.append(atnd)
+        
+        context['atnds'] = atnds
+        
+        return context
 
 
 class ActrDelete(ProdBaseDeleteView):
@@ -1119,11 +1142,11 @@ class ApprTable(LoginRequiredMixin, TemplateView):
         # 登場人物名リスト
         characters = Character.objects.filter(production__pk=prod_id)\
             .order_by('sortkey')
-        context['characters'] = json.dumps([chr.short_name for chr in characters])
+        context['characters'] = json.dumps([chr.get_short_name() for chr in characters])
         
         # 役者名リスト
         actors = Actor.objects.filter(production__pk=prod_id)
-        context['cast'] = json.dumps([actr.short_name for actr in actors])
+        context['cast'] = json.dumps([actr.get_short_name() for actr in actors])
         
         # 登場人物の出番 (セリフ数) のリスト
         scenes_chr_apprs = []

@@ -103,6 +103,9 @@ class Actor(models.Model):
     
     def __str__(self):
         return self.name
+    
+    def get_short_name(self):
+        return self.short_name or self.name[:3]
 
 
 class Character(models.Model):
@@ -122,12 +125,13 @@ class Character(models.Model):
         verbose_name = verbose_name_plural = '登場人物'
     
     def __str__(self):
-        # ex. '沙悟浄 (三橋)'
+        # ex. '沙悟浄(三橋)'
         if self.cast:
-            if self.cast.short_name:
-                return '{} ({})'.format(self.name, self.cast.short_name)
-            return '{} ({})'.format(self.name, self.cast.name[:3])
+            return '{}({})'.format(self.name, self.cast.get_short_name())
         return self.name
+    
+    def get_short_name(self):
+        return self.short_name or self.name[:3]
 
 
 class Attendance(models.Model):

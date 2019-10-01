@@ -31,7 +31,7 @@
 
 <table style="clear: both;">
     <tr><th>シーン</th><th>セリフ数</th></tr>
-    {% for appr in apprs%}
+    {% for appr in apprs %}
     <tr>
     <td>{{ appr.scene }}</td><td>
     {% if appr.lines_auto %}自動{% else %}{{ appr.lines_num }}{% endif %}
