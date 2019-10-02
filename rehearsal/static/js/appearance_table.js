@@ -173,14 +173,14 @@ function draw(){
             appearance = scn_apprs[scn_idx];
             // セリフ数のセルをソート順に表示
             appr_order.forEach(appr_idx => {
-                // セルの色
-                color = appearance[appr_idx] == 0
+                // セルの色 (-1 なら出番なし)
+                color = appearance[appr_idx] < 0
                     ? cell_color
                     : scn_idx == selected_scn
                         ? cell_color_selected
                         : cell_color_appr;
-                // セリフがなければ空白、あれば整数に丸める
-                text = appearance[appr_idx] == 0
+                // 出番がなければ空白、あれば整数に丸める
+                text = appearance[appr_idx] < 0
                     ? ""
                     : Math.round(appearance[appr_idx]);
                 

@@ -170,7 +170,7 @@ class Appearance(models.Model):
     character = models.ForeignKey(Character, verbose_name='登場人物',
         on_delete=models.CASCADE)
     lines_num = models.IntegerField('セリフ数', default=1,
-        validators=[MinValueValidator(1)])
+        validators=[MinValueValidator(0)])
     lines_auto = models.BooleanField('セリフ数を決めない', default=False)
     
     class Meta:

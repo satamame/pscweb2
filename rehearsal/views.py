@@ -1148,7 +1148,7 @@ class ApprTable(LoginRequiredMixin, TemplateView):
         actors = Actor.objects.filter(production__pk=prod_id)
         context['cast'] = json.dumps([actr.get_short_name() for actr in actors])
         
-        # 登場人物の出番 (セリフ数) のリスト
+        # 各シーンの登場人物の出番 (セリフ数) のリスト
         scenes_chr_apprs = []
         for scene in scenes:
             # とりあえず人数分のリストを作る
@@ -1185,34 +1185,43 @@ class ApprTable(LoginRequiredMixin, TemplateView):
                     else:
                         scn_apprs.append(appr.lines_num)
                 else:
-                    # 出番がないなら0を入れる
-                    scn_apprs.append(0)
+                    # 出番がないなら -1 を入れる
+                    scn_apprs.append(-1)
             
             scenes_chr_apprs.append(scn_apprs)
         context['chr_apprs'] = json.dumps(scenes_chr_apprs)
         
-        # 役者の出番 (セリフ数) のリスト
+        # 各シーンの役者の出番 (セリフ数) のリスト
         cast_for_chrs = []
+        # まず、各登場人物の配役が actors の何番目にあるかのリストを作る
         for character in characters:
-            # 各登場人物のキャストが、actors の何番目にあるかのリスト
             try:
                 actr_idx = list(actors).index(character.cast)
             except ValueError:
-                # なければ -1
+                # 配役がなければ -1
                 actr_idx = -1
             cast_for_chrs.append(actr_idx)
         
         scenes_cast_apprs = []
+        # シーンごとに見ていく
         for chr_apprs in scenes_chr_apprs:
             actr_apprs = []
+            # 役者ごとに演じる人物のセリフ数を足していく
             for actr_idx, actr in enumerate(actors):
                 lines_num = 0
-                # 登場人物の各キャストについて
+                appearing = False
+                # 登場人物ごとにキャストのインデックスを見ていく
                 for chr_idx, cast in enumerate(cast_for_chrs):
-                    # インデックスが等しければ、その登場人物のセリフ数を足す
+                    # インデックスが外側のループと等しければ、そのセリフ数を足す
                     if cast == actr_idx:
-                        lines_num += chr_apprs[chr_idx]
-                actr_apprs.append(lines_num)
+                        if chr_apprs[chr_idx] >= 0:
+                            lines_num += chr_apprs[chr_idx]
+                            appearing = True
+                if appearing:
+                    actr_apprs.append(lines_num)
+                # その役者の出番がなかったら、-1 を入れる
+                else:
+                    actr_apprs.append(-1)
             scenes_cast_apprs.append(actr_apprs)
         context['cast_apprs'] = json.dumps(scenes_cast_apprs)
         
