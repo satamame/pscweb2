@@ -330,8 +330,8 @@ class ScnCreate(ProdBaseCreateView):
     '''Scene の追加ビュー
     '''
     model = Scene
-    fields = ('name', 'sortkey', 'length', 'length_auto', 'progress',
-        'priority', 'note')
+    fields = ('name', 'sortkey', 'description', 'length', 'length_auto',
+        'progress', 'priority', 'note')
     
     def get_success_url(self):
         '''追加に成功した時の遷移先を動的に与える
@@ -345,8 +345,8 @@ class ScnUpdate(ProdBaseUpdateView):
     '''Scene の更新ビュー
     '''
     model = Scene
-    fields = ('name', 'sortkey', 'length', 'length_auto', 'progress',
-        'priority', 'note')
+    fields = ('name', 'sortkey', 'description', 'length', 'length_auto',
+        'progress', 'priority', 'note')
     
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える

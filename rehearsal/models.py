@@ -67,6 +67,7 @@ class Scene(models.Model):
         on_delete=models.CASCADE)
     name = models.CharField('シーン名', max_length=50)
     sortkey = models.IntegerField('順番', default=0)
+    description = models.CharField('説明', max_length=200, blank=True)
     length = models.IntegerField('長さ', default=1,
         validators=[MinValueValidator(1)])
     length_auto = models.BooleanField('長さは適当', default=True)
@@ -74,9 +75,9 @@ class Scene(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(100)])
     PRIORITY_CHOICES = (
         (1, '最高'),
-        (2, '高め'),
-        (3, '普通'),
-        (4, '低め'),
+        (2, '高'),
+        (3, '-'),
+        (4, '低'),
         (5, '最低'),
     )
     priority = models.IntegerField('優先度', default=3,
