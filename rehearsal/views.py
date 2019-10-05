@@ -1149,13 +1149,14 @@ class ApprTable(LoginRequiredMixin, TemplateView):
         context['cast'] = json.dumps([actr.get_short_name() for actr in actors])
         
         # 各シーンの登場人物の出番 (セリフ数) のリスト
+        appearances = Appearance.objects.filter(scene__production__pk=prod_id)
         scenes_chr_apprs = []
         for scene in scenes:
             # とりあえず人数分のリストを作る
             chr_apprs = []
             for character in characters:
-                apprs = Appearance.objects.filter(
-                    scene=scene, character=character)
+                apprs = [appr for appr in appearances
+                    if appr.scene == scene and appr.character == character]
                 if len(apprs) > 0:
                     chr_apprs.append(apprs[0])
                 else:
