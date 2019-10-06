@@ -20,13 +20,11 @@
     <tr><th>配役</th><td>{{ object.cast }}</td></tr>
 </table>
 
-<div style="margin-top: 20px;">
-<div style="float: left; width: 60%; font-weight: bold;">出番</div>
-{% if view.prod_user.is_owner or view.prod_user.is_editor %}
+<div class="sectionheader headline">出番</div>
 <div align="right">
+    {% if view.prod_user.is_owner or view.prod_user.is_editor %}
     <a href="{% url 'rehearsal:chr_appr_create' chr_id=object.id %}" class="addlink">追加</a>
-</div>
-{% endif %}
+    {% endif %}
 </div>
 
 <table style="clear: both;">

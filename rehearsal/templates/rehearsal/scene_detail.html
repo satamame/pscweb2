@@ -24,13 +24,12 @@
     <tr><th>メモ</th><td>{{ object.note | urlize | linebreaksbr }}</td></tr>
 </table>
 
-<div style="margin-top: 20px;">
-<div style="float: left; width: 60%; font-weight: bold;">出番</div>
-{% if view.prod_user.is_owner or view.prod_user.is_editor %}
+<details>
+<summary class="sectionheader headline">出番</summary>
 <div align="right">
+    {% if view.prod_user.is_owner or view.prod_user.is_editor %}
     <a href="{% url 'rehearsal:scn_appr_create' scn_id=object.id %}" class="addlink">追加</a>
-</div>
-{% endif %}
+    {% endif %}
 </div>
 
 <table style="clear: both;">
@@ -48,12 +47,11 @@
     </tr>
     {% endfor %}
 </table>
+</details>
 
-<div style="margin-top: 20px;">
-<div style="float: left; width: 60%; font-weight: bold;">コメント</div>
+<div class="sectionheader headline">コメント</div>
 <div align="right">
     <a href="{% url 'rehearsal:scn_cmt_create' scn_id=object.id %}" class="addlink">追加</a>
-</div>
 </div>
 
 <table style="clear: both;">

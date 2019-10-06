@@ -18,13 +18,11 @@
     <tr><th>短縮名</th><td>{{ object.short_name }}</td></tr>
 </table>
 
-<div style="margin-top: 20px;">
-<div style="font-weight: bold;">参加時間</div>
-</div>
+<div class="sectionheader headline">参加時間</div>
 
-<table>
+<table style="margin-top:20px;">
 {% for atnd in atnds %}
-<tr style="background-color:azure;">
+<tr style="background-color:#fdfbf8;">
 <td>{{ atnd.rhsl }}</td><td>{{ atnd.rhsl.start_time}}-{{ atnd.rhsl.end_time}}</td>
 {% if view.prod_user.is_owner or view.prod_user.is_editor %}
 <td>
@@ -36,10 +34,10 @@
 {% for slot in atnd.slots %}
     <tr>
     {% if slot.is_absent %}
-        <td align="right">🞩</td><td>欠席</td>
+        <td align="right">✕</td><td>欠席</td>
     {% else %}
         {% if slot.is_allday %}
-        <td align="right">○</td><td>全日</td>
+        <td align="right">◯</td><td>全日</td>
         {% else %}
         <td align="right">参加</td><td>{{ slot.from_time }}-{{ slot.to_time }}</td>
         {% endif %}

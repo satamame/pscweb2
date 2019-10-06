@@ -1010,3 +1010,17 @@ header nav ul li:first-child::before {
 .popup #header {
     padding: 10px 20px;
 }
+
+/* HEADLINES */
+
+.headline {
+    background-color: #f8fff8;
+}
+
+.sectionheader {
+    font-weight: bold;
+    margin-top: 20px;
+    border-top: solid 1px #eeeeee;
+    border-bottom: solid 1px #eeeeee;
+    padding: 1px 5px;
+}
