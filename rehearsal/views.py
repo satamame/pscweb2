@@ -552,7 +552,9 @@ class ActrDetail(ProdBaseDetailView):
         context = super().get_context_data(**kwargs)
 
         # 稽古のコマのリスト
-        rhsls = Rehearsal.objects.all().order_by('date', 'start_time')
+        prod_id = self.get_object().production.id
+        rhsls = Rehearsal.objects.filter(
+            production__pk=prod_id).order_by('date', 'start_time')
         
         # 各コマの (稽古情報とこの役者の参加時間のリスト) のリスト
         atnds = []
@@ -798,6 +800,10 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
+        # page_from を view の属性として持っておく
+        # テンプレートでリンクの URL を決めるため
+        self.page_from = self.kwargs['from']
+        
         # 編集権を検査する
         test_edit_permission(self, self.get_object().scene.production.id)
         
@@ -813,12 +819,10 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
         '''
-        page_from = self.kwargs['from']
-        
-        if page_from == 'scn':
+        if self.page_from == 'scn':
             scn_id = self.object.scene.id
             url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
-        elif page_from == 'chr':
+        elif self.page_from == 'chr':
             chr_id = self.object.character.id
             url = reverse_lazy('rehearsal:chr_detail', kwargs={'pk': chr_id})
         else:
@@ -859,6 +863,10 @@ class ApprDelete(LoginRequiredMixin, DeleteView):
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
+        # page_from を view の属性として持っておく
+        # テンプレートでリンクの URL を決めるため
+        self.page_from = self.kwargs['from']
+
         # 編集権を検査する
         test_edit_permission(self, self.get_object().scene.production.id)
         
@@ -867,12 +875,10 @@ class ApprDelete(LoginRequiredMixin, DeleteView):
     def get_success_url(self):
         '''削除に成功した時の遷移先を動的に与える
         '''
-        page_from = self.kwargs['from']
-        
-        if page_from == 'scn':
+        if self.page_from == 'scn':
             scn_id = self.object.scene.id
             url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
-        elif page_from == 'chr':
+        elif self.page_from == 'chr':
             chr_id = self.object.character.id
             url = reverse_lazy('rehearsal:chr_detail', kwargs={'pk': chr_id})
         else:
@@ -1129,18 +1135,41 @@ class AtndCreate(LoginRequiredMixin, CreateView):
         self.rehearsal = self.get_rehearsal_from_request()
         self.production = self.actor.production
         
+        # 役者の production と 稽古の productin が違ったら 404
+        if self.actor.production != self.rehearsal.production:
+            raise Http404
+        
         # 編集権を検査する
-        test_edit_permission(self, self.actor.production.id)
+        test_edit_permission(self, self.production.id)
         
         return super().get(request, *args, **kwargs)
+    
+    def get_form_kwargs(self):
+        '''フォームに渡す情報を改変する
+        '''
+        kwargs = super().get_form_kwargs()
+        
+        # フォーム側でバリデーションに使うので actor, rehearsal を渡す
+        kwargs['actor'] = self.actor
+        kwargs['rehearsal'] = self.rehearsal
+        
+        return kwargs
     
     def post(self, request, *args, **kwargs):
         '''保存時のリクエストを受けるハンドラ
         '''
+        # page_from を view の属性として持っておく
+        # テンプレートでリンクの URL を決めるため
+        self.page_from = self.kwargs['from']
+        
         # actor, rehearsal を view の属性として持っておく
         # 保存時にインスタンスにセットするため
         self.actor = self.get_actor_from_request()
         self.rehearsal = self.get_rehearsal_from_request()
+        
+        # 役者の production と 稽古の productin が違ったら 404
+        if self.actor.production != self.rehearsal.production:
+            raise Http404
         
         # 編集権を検査する
         test_edit_permission(self, self.actor.production.id)
@@ -1161,12 +1190,10 @@ class AtndCreate(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
         '''
-        page_from = self.kwargs['from']
-        
-        if page_from == 'actr':
+        if self.page_from == 'actr':
             actr_id = self.actor.id
             url = reverse_lazy('rehearsal:actr_detail', kwargs={'pk': actr_id})
-        elif page_from == 'rhsl':
+        elif self.page_from == 'rhsl':
             rhsl_id = self.rehearsal.id
             url = reverse_lazy('rehearsal:rhsl_detail', kwargs={'pk': rhsl_id})
         else:

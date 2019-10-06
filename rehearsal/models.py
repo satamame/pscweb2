@@ -168,19 +168,6 @@ class Attendance(models.Model):
             to_time = self.to_time.strftime('%H:%M') if self.to_time else '??:??'
             str += '{}-{}'.format(from_time, to_time)
         return str
-    
-    def clean(self):
-        '''admin 画面用に、モデル側でもバリデーションする
-        '''
-        if self.is_absent and self.is_allday:
-            raise ValidationError('「全日」「欠席」の両方を選択することは出来ません。')
-        if not (self.is_absent or self.is_allday):
-            if not (self.from_time and self.to_time):
-                raise ValidationError('「全日」「欠席」でない場合、参加時間は必須です。')
-    
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
 
 
 class Appearance(models.Model):

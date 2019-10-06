@@ -30,7 +30,8 @@
     {% csrf_token %}
     <table>
         <tr><th><label>公演:</label></th><td>{{ view.production }}</td></tr>
-        <tr><th><label>稽古:</label></th><td>{{ view.rehearsal }}</td></tr>
+        <tr><th><label>稽古:</label></th><td>{{ view.rehearsal.date }} {{ view.rehearsal.start_time }}-{{ view.rehearsal.end_time }}<br>
+            {{ view.rehearsal.place.venue }} {{view.rehearsal.place}}</td></tr>
         <tr><th><label>役者:</label></th><td>{{ view.actor }}</td></tr>
         {{ form.as_table }}
     </table>

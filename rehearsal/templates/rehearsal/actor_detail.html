@@ -27,8 +27,10 @@
 <tr>
 <td>{{ atnd.rhsl }}</td><td>{{ atnd.rhsl.start_time}}-{{ atnd.rhsl.end_time}}</td>
 <td>
+{% if view.prod_user.is_owner or view.prod_user.is_editor %}
 <a href="{% url 'rehearsal:atnd_create' actr_id=object.id rhsl_id=atnd.rhsl.id from='actr' %}"
     class="addlink">追加</a>
+{% endif %}
 </td>
 </tr>
 {% for slot in atnd.slots %}
