@@ -26,11 +26,23 @@
 {% for atnd in atnds %}
 <tr>
 <td>{{ atnd.rhsl }}</td><td>{{ atnd.rhsl.start_time}}-{{ atnd.rhsl.end_time}}</td>
-<td>追加</td>
+<td>
+<a href="{% url 'rehearsal:atnd_create' actr_id=object.id rhsl_id=atnd.rhsl.id from='actr' %}"
+    class="addlink">追加</a>
+</td>
 </tr>
 {% for slot in atnd.slots %}
-<tr><td></td>
+<tr>
+{% if slot.is_absent %}
+<td></td><td>欠席</td>
+{% else %}
+<td align="right">参加</td>
+{% if slot.is_allday %}
+<td>全日</td>
+{% else %}
 <td>{{ slot.from_time }}-{{ slot.to_time }}</td>
+{% endif %}
+{% endif %}
 <td>編集</td>
 </tr>
 {% endfor %}

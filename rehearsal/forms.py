@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.admin.widgets import AdminDateWidget, AdminTimeWidget
 from production.models import Production
-from .models import Rehearsal, Scene, Character, Actor, Appearance, ScnComment
+from .models import Rehearsal, Scene, Character, Actor, Appearance, ScnComment,\
+    Attendance
 
 
 class RhslForm(forms.ModelForm):
@@ -71,3 +72,23 @@ class ChrApprForm(forms.ModelForm):
             raise forms.ValidationError(
                 'そのシーンにはすでに登場しています。')
         return scene
+
+
+class AtndForm(forms.ModelForm):
+    '''参加時間の追加・編集フォーム
+    '''
+    class Meta:
+        model = Attendance
+        fields = ('from_time', 'to_time', 'is_allday', 'is_absent')
+    
+    def clean_to_time(self):
+        '''to_time が from_time より遅いことのバリデーション
+        '''
+        from_time = self.cleaned_data['from_time']
+        to_time = self.cleaned_data['to_time']
+        
+        # to_time が from_time より遅くなければエラー
+        if to_time <= from_time:
+            raise forms.ValidationError(
+                'To は From より遅くしてください。')
+        return to_time

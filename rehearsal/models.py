@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from production.models import Production, ProdUser
 
@@ -139,15 +140,16 @@ class Attendance(models.Model):
     '''参加時間
     
     1コマの稽古に同じ人の参加時間が複数回あっても良い
-    is_absent が True のレコードは特別な意味を持ち、
-    同じ稽古にそれ以外のレコードをセットできない
+    is_absent が True なら、同じ稽古にそれ以外のレコードをセットできない
+    is_allday が True なら、同じ稽古にそれ以外のレコードをセットできない
     '''
     rehearsal = models.ForeignKey(Rehearsal, verbose_name='稽古のコマ',
         on_delete=models.CASCADE)
     actor = models.ForeignKey(Actor, verbose_name='役者',
         on_delete=models.CASCADE)
-    from_time = models.TimeField('From')
-    to_time = models.TimeField('To')
+    from_time = models.TimeField('From', blank=True, null=True)
+    to_time = models.TimeField('To', blank=True, null=True)
+    is_allday = models.BooleanField('全日', default=False)
     is_absent = models.BooleanField('欠席', default=False)
     
     class Meta:
@@ -155,9 +157,30 @@ class Attendance(models.Model):
     
     def __str__(self):
         # ex. '08/30,三橋,14:00-18:30'
-        return '{},{},{}-{}'.format(self.rehearsal.date.strftime('%m/%d'),
-            self.actor.short_name, self.from_time.strftime('%H:%M'),
-            self.to_time.strftime('%H:%M'))
+        str = '{},{},'.format(self.rehearsal.date.strftime('%m/%d'),
+            self.actor.get_short_name())
+        if self.is_absent:
+            str += '欠席'
+        elif self.is_allday:
+            str += '全日'
+        else:
+            from_time = self.from_time.strftime('%H:%M') if self.from_time else '??:??'
+            to_time = self.to_time.strftime('%H:%M') if self.to_time else '??:??'
+            str += '{}-{}'.format(from_time, to_time)
+        return str
+    
+    def clean(self):
+        '''admin 画面用に、モデル側でもバリデーションする
+        '''
+        if self.is_absent and self.is_allday:
+            raise ValidationError('「全日」「欠席」の両方を選択することは出来ません。')
+        if not (self.is_absent or self.is_allday):
+            if not (self.from_time and self.to_time):
+                raise ValidationError('「全日」「欠席」でない場合、参加時間は必須です。')
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
 
 class Appearance(models.Model):

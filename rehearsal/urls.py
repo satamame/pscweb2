@@ -91,6 +91,11 @@ urlpatterns = [
     path('scn_cmt_delete/<int:pk>/', views.ScnCmtDelete.as_view(),
         name='scn_cmt_delete'),
     
+    # /rhsl/atnd_create/1/2/{actr|rhsl}/
+    #   -> Attendance Create for Actor #2 in Rehearsal #1
+    path('atnd_create/<int:rhsl_id>/<int:actr_id>/<str:from>/',
+        views.AtndCreate.as_view(), name='atnd_create'),
+    
     # /rhsl/appr_table/1/ -> Appearance table for Production #1
     path('appr_table/<int:prod_id>/', views.ApprTable.as_view(),
         name='appr_table'),

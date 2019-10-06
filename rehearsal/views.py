@@ -10,7 +10,7 @@ from django.core.exceptions import PermissionDenied
 from production.models import Production, ProdUser
 from .models import Rehearsal, Scene, Place, Facility, Character, Actor,\
     Appearance, ScnComment, Attendance
-from .forms import RhslForm, ScnApprForm, ChrApprForm
+from .forms import RhslForm, ScnApprForm, ChrApprForm, AtndForm
 
 
 def accessing_prod_user(view, prod_id=None):
@@ -673,7 +673,6 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         scenes = Scene.objects.filter(pk=self.kwargs['scn_id'])
         if len(scenes) < 1:
             raise Http404
-        
         return scenes[0]
 
 
@@ -767,7 +766,6 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
         characters = Character.objects.filter(pk=self.kwargs['chr_id'])
         if len(characters) < 1:
             raise Http404
-        
         return characters[0]
 
 
@@ -1108,6 +1106,100 @@ class ScnCmtDelete(LoginRequiredMixin, DeleteView):
             raise PermissionDenied
         
         return prod_user
+
+
+class AtndCreate(LoginRequiredMixin, CreateView):
+    '''役者詳細から Attendance を追加する時のビュー
+
+    Template 名: attendance_form (default)
+    '''
+    model = Attendance
+    form_class = AtndForm
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # page_from を view の属性として持っておく
+        # テンプレートでリンクの URL を決めるため
+        self.page_from = self.kwargs['from']
+
+        # actor, rehearsal, production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.actor = self.get_actor_from_request()
+        self.rehearsal = self.get_rehearsal_from_request()
+        self.production = self.actor.production
+        
+        # 編集権を検査する
+        test_edit_permission(self, self.actor.production.id)
+        
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # actor, rehearsal を view の属性として持っておく
+        # 保存時にインスタンスにセットするため
+        self.actor = self.get_actor_from_request()
+        self.rehearsal = self.get_rehearsal_from_request()
+        
+        # 編集権を検査する
+        test_edit_permission(self, self.actor.production.id)
+        
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        '''バリデーションを通った時
+        '''
+        # 追加しようとする attendance の actor, rehearsal をセット
+        new_atnd = form.save(commit=False)
+        new_atnd.actor = self.actor
+        new_atnd.rehearsal = self.rehearsal
+        
+        messages.success(self.request, str(new_atnd) + " を追加しました。")
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        '''更新に成功した時の遷移先を動的に与える
+        '''
+        page_from = self.kwargs['from']
+        
+        if page_from == 'actr':
+            actr_id = self.actor.id
+            url = reverse_lazy('rehearsal:actr_detail', kwargs={'pk': actr_id})
+        elif page_from == 'rhsl':
+            rhsl_id = self.rehearsal.id
+            url = reverse_lazy('rehearsal:rhsl_detail', kwargs={'pk': rhsl_id})
+        else:
+            prod_id = self.object.actor.production.id
+            url = reverse_lazy('rehearsal:rhsl_top', kwargs={'prod_id': prod_id})
+        
+        return url
+    
+    def form_invalid(self, form):
+        '''追加に失敗した時
+        '''
+        messages.warning(self.request, "追加できませんでした。")
+        return super().form_invalid(form)
+    
+    def get_actor_from_request(self):
+        '''リクエストから actor を取得して返す
+        
+        actor がなければ 404 エラーを投げる
+        '''
+        actors = Actor.objects.filter(pk=self.kwargs['actr_id'])
+        if len(actors) < 1:
+            raise Http404
+        return actors[0]
+    
+    def get_rehearsal_from_request(self):
+        '''リクエストから rehearsal を取得して返す
+        
+        rehearsal がなければ 404 エラーを投げる
+        '''
+        rehearsals = Rehearsal.objects.filter(pk=self.kwargs['rhsl_id'])
+        if len(rehearsals) < 1:
+            raise Http404
+        return rehearsals[0]
 
 
 class ApprTable(LoginRequiredMixin, TemplateView):
