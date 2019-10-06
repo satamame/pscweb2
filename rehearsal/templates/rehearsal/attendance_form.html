@@ -16,9 +16,9 @@
 
 {% if object %}
     {% if view.page_from == 'actr' %}
-    <div align="right"><a href="" class="deletelink">削除</a></div>
+    <div align="right"><a href="{% url 'rehearsal:atnd_delete' pk=object.id from='actr' %}" class="deletelink">削除</a></div>
     {% elif view.page_from == 'rhsl' %}
-    <div align="right"><a href="" class="deletelink">削除</a></div>
+    <div align="right"><a href="{% url 'rehearsal:atnd_delete' pk=object.id from='rhsl' %}" class="deletelink">削除</a></div>
     {% else %}
     <div>&nbsp;</div>
     {% endif %}

@@ -95,9 +95,14 @@ urlpatterns = [
     #   -> Attendance Create for Actor #2 in Rehearsal #1
     path('atnd_create/<int:rhsl_id>/<int:actr_id>/<str:from>/',
         views.AtndCreate.as_view(), name='atnd_create'),
+    # /rhsl/atnd_update/1/{actr|rhsl}/ -> Attendance #1 Update
+    path('atnd_update/<int:pk>/<str:from>/', views.AtndUpdate.as_view(),
+        name='atnd_update'),
+    # /rhsl/atnd_delete/1/{actr|rhsl}/ -> Attendance #1 Delete
+    path('atnd_delete/<int:pk>/<str:from>/', views.AtndDelete.as_view(),
+        name='atnd_delete'),
     
     # /rhsl/appr_table/1/ -> Appearance table for Production #1
     path('appr_table/<int:prod_id>/', views.ApprTable.as_view(),
         name='appr_table'),
-    
 ]

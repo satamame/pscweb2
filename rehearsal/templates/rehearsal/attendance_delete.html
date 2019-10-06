@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="margin: 0px;">
+{% if view.page_from == 'actr'%}
+<a href="{% url 'rehearsal:actr_detail' pk=object.actor.id %}">◀</a>
+{% elif view.page_from == 'rhsl'%}
+<a href="{% url 'rehearsal:rhsl_detail' pk=object.rehearsal.id %}">◀</a>
+{% else %}
+<a href="{% url 'rehearsal:rhsl_top' prod_id=object.actor.production.id %}">◀</a>
+{% endif %}
+参加時間の削除
+</h1>
+
+<form method="post">{% csrf_token %}
+    <p>この参加時間を削除しますか？</p>
+    <input type="submit" value="削除する">
+    {% if view.page_from == 'actr'%}
+    <input type="button" onclick="location.href='{% url 'rehearsal:actr_detail' pk=object.actor.id %}'" value="キャンセル">
+    {% elif view.page_from == 'rhsl'%}
+    <input type="button" onclick="location.href='{% url 'rehearsal:rhsl_detail' pk=object.rehearsal.id %}'" value="キャンセル">
+    {% else %}
+    <input type="button" onclick="location.href='{% url 'rehearsal:rhsl_top' prod_id=object.actor.production.id %}'" value="キャンセル">
+    {% endif %}
+</form>
+
+<table>
+    <tr><th>公演</th><td>{{ object.actor.production }}</td></tr>
+    <tr><th>稽古</th><td>{{ object.rehearsal }}</td></tr>
+    <tr><th>役者</th><td>{{ object.actor }}</td></tr>
+    <tr><th>全日</th><td>{{ object.is_allday }}</td></tr>
+    <tr><th>欠席</th><td>{{ object.is_absent }}</td></tr>
+    <tr><th>From</th><td>{{ object.from_time }}</td></tr>
+    <tr><th>To</th><td>{{ object.to_time }}</td></tr>
+</table>
+{% endblock %}

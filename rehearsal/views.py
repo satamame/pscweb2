@@ -1082,7 +1082,7 @@ class ScnCmtDelete(LoginRequiredMixin, DeleteView):
         return super().post(request, *args, **kwargs)
     
     def get_success_url(self):
-        '''追加に成功した時の遷移先を動的に与える
+        '''削除に成功した時の遷移先を動的に与える
         '''
         scn_id = self.object.scene.id
         url = reverse_lazy('rehearsal:scn_detail', kwargs={'pk': scn_id})
@@ -1135,7 +1135,7 @@ class AtndCreate(LoginRequiredMixin, CreateView):
         self.rehearsal = self.get_rehearsal_from_request()
         self.production = self.actor.production
         
-        # 役者の production と 稽古の productin が違ったら 404
+        # 役者の production と 稽古の production が違ったら 404
         if self.actor.production != self.rehearsal.production:
             raise Http404
         
@@ -1167,7 +1167,7 @@ class AtndCreate(LoginRequiredMixin, CreateView):
         self.actor = self.get_actor_from_request()
         self.rehearsal = self.get_rehearsal_from_request()
         
-        # 役者の production と 稽古の productin が違ったら 404
+        # 役者の production と 稽古の production が違ったら 404
         if self.actor.production != self.rehearsal.production:
             raise Http404
         
@@ -1227,6 +1227,155 @@ class AtndCreate(LoginRequiredMixin, CreateView):
         if len(rehearsals) < 1:
             raise Http404
         return rehearsals[0]
+
+
+class AtndUpdate(LoginRequiredMixin, UpdateView):
+    '''Attendance を更新する時のビュー
+
+    Template 名: attendance_form (default)
+    '''
+    model = Attendance
+    form_class = AtndForm
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # page_from を view の属性として持っておく
+        # テンプレートでリンクの URL を決めるため
+        self.page_from = self.kwargs['from']
+
+        # actor, rehearsal, production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.actor = self.get_object().actor
+        self.rehearsal = self.get_object().rehearsal
+        self.production = self.actor.production
+        
+        # 役者の production と 稽古の productin が違ったら 404
+        if self.actor.production != self.rehearsal.production:
+            raise Http404
+        
+        # 編集権を検査する
+        test_edit_permission(self, self.production.id)
+        
+        return super().get(request, *args, **kwargs)
+    
+    def get_form_kwargs(self):
+        '''フォームに渡す情報を改変する
+        '''
+        kwargs = super().get_form_kwargs()
+        
+        # フォーム側でバリデーションに使うので actor, rehearsal を渡す
+        kwargs['actor'] = self.actor
+        kwargs['rehearsal'] = self.rehearsal
+        
+        return kwargs
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # page_from を view の属性として持っておく
+        # テンプレートでリンクの URL を決めるため
+        self.page_from = self.kwargs['from']
+        
+        # actor, rehearsal を view の属性として持っておく
+        # 保存時にインスタンスにセットするため
+        self.actor = self.get_object().actor
+        self.rehearsal = self.get_object().rehearsal
+        
+        # 役者の production と 稽古の production が違ったら 404
+        if self.actor.production != self.rehearsal.production:
+            raise Http404
+        
+        # 編集権を検査する
+        test_edit_permission(self, self.actor.production.id)
+        
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        '''バリデーションを通った時
+        '''
+        messages.success(self.request, str(form.instance)
+            + " を更新しました。")
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        '''更新に成功した時の遷移先を動的に与える
+        '''
+        if self.page_from == 'actr':
+            actr_id = self.actor.id
+            url = reverse_lazy('rehearsal:actr_detail', kwargs={'pk': actr_id})
+        elif self.page_from == 'rhsl':
+            rhsl_id = self.rehearsal.id
+            url = reverse_lazy('rehearsal:rhsl_detail', kwargs={'pk': rhsl_id})
+        else:
+            prod_id = self.object.actor.production.id
+            url = reverse_lazy('rehearsal:rhsl_top', kwargs={'prod_id': prod_id})
+        
+        return url
+    
+    def form_invalid(self, form):
+        '''更新に失敗した時
+        '''
+        messages.warning(self.request, "更新できませんでした。")
+        return super().form_invalid(form)
+
+
+class AtndDelete(LoginRequiredMixin, DeleteView):
+    '''Attendance を削除する時のビュー
+
+    Template 名: attendance_delete
+    '''
+    model = Attendance
+    template_name_suffix = '_delete'
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # page_from を view の属性として持っておく
+        # テンプレートでリンクの URL を決めるため
+        self.page_from = self.kwargs['from']
+        
+        # 編集権を検査する
+        prod_id = self.get_object().rehearsal.production.id
+        test_edit_permission(self, prod_id)
+        
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # page_from を view の属性として持っておく
+        # テンプレートでリンクの URL を決めるため
+        self.page_from = self.kwargs['from']
+
+        # 編集権を検査する
+        prod_id = self.get_object().rehearsal.production.id
+        test_edit_permission(self, prod_id)
+        
+        return super().post(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        '''削除に成功した時の遷移先を動的に与える
+        '''
+        if self.page_from == 'actr':
+            actr_id = self.object.actor.id
+            url = reverse_lazy('rehearsal:actr_detail', kwargs={'pk': actr_id})
+        elif self.page_from == 'rhsl':
+            rhsl_id = self.object.rehearsal.id
+            url = reverse_lazy('rehearsal:rhsl_detail', kwargs={'pk': rhsl_id})
+        else:
+            prod_id = self.object.actor.production.id
+            url = reverse_lazy('rehearsal:rhsl_top', kwargs={'prod_id': prod_id})
+        
+        return url
+    
+    def delete(self, request, *args, **kwargs):
+        '''削除した時のメッセージ
+        '''
+        result = super().delete(request, *args, **kwargs)
+        messages.success(
+            self.request, str(self.object) + " を削除しました。")
+        return result
 
 
 class ApprTable(LoginRequiredMixin, TemplateView):

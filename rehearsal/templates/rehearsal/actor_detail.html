@@ -24,29 +24,33 @@
 
 <table>
 {% for atnd in atnds %}
-<tr>
+<tr style="background-color:azure;">
 <td>{{ atnd.rhsl }}</td><td>{{ atnd.rhsl.start_time}}-{{ atnd.rhsl.end_time}}</td>
-<td>
 {% if view.prod_user.is_owner or view.prod_user.is_editor %}
+<td>
 <a href="{% url 'rehearsal:atnd_create' actr_id=object.id rhsl_id=atnd.rhsl.id from='actr' %}"
     class="addlink">追加</a>
-{% endif %}
 </td>
+{% endif %}
 </tr>
 {% for slot in atnd.slots %}
-<tr>
-{% if slot.is_absent %}
-<td></td><td>欠席</td>
-{% else %}
-<td align="right">参加</td>
-{% if slot.is_allday %}
-<td>全日</td>
-{% else %}
-<td>{{ slot.from_time }}-{{ slot.to_time }}</td>
-{% endif %}
-{% endif %}
-<td>編集</td>
-</tr>
+    <tr>
+    {% if slot.is_absent %}
+        <td align="right">🞩</td><td>欠席</td>
+    {% else %}
+        {% if slot.is_allday %}
+        <td align="right">○</td><td>全日</td>
+        {% else %}
+        <td align="right">参加</td><td>{{ slot.from_time }}-{{ slot.to_time }}</td>
+        {% endif %}
+    {% endif %}
+    {% if view.prod_user.is_owner or view.prod_user.is_editor %}
+        <td>
+        <a href="{% url 'rehearsal:atnd_update' pk=slot.id from='actr' %}"
+            class="changelink">編集</a>
+        </td>
+    {% endif %}
+    </tr>
 {% endfor %}
 {% endfor %}
 </table>
