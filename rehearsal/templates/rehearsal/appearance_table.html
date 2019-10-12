@@ -35,10 +35,15 @@
 
 <script>
 // View からもらうデータ
+// シーン名のリスト
 scenes = JSON.parse('{{ scenes|safe }}');
+// 登場人物名の短縮名のリスト
 chrs = JSON.parse('{{ characters|safe }}');
+// 登場人物のセリフ数のリスト
 chr_apprs = JSON.parse('{{ chr_apprs|safe }}');
+// 役者の短縮名のリスト
 cast = JSON.parse('{{ cast|safe }}');
+// 役者のセリフ数のリスト
 cast_apprs = JSON.parse('{{ cast_apprs|safe }}');
 
 init();

@@ -105,4 +105,8 @@ urlpatterns = [
     # /rhsl/appr_table/1/ -> Appearance table for Production #1
     path('appr_table/<int:prod_id>/', views.ApprTable.as_view(),
         name='appr_table'),
+
+    # /rhsl/atnd_table/1/ -> Attendance table for Production #1
+    path('atnd_table/<int:prod_id>/', views.AtndTable.as_view(),
+        name='atnd_table'),
 ]

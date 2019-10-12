@@ -36,7 +36,6 @@ function init(){
     
     document.getElementById("scn_keyword").value = "";
     document.getElementById("by_cast").checked = false;
-    draw();
 }
 
 // 入力されたキーワードから正規表現パターンを得る

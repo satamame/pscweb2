@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 style="margin: 0;">
+<a href="{% url 'rehearsal:rhsl_top' prod_id=prod_id %}">◀</a>
+出欠表
+</h1>
+
+<!-- p>
+名前 <input id="name_keyword" type="text" />
+</p -->
+
+<table style="border:1px solid #eee;">
+<thead id="t_header" style="display:block;"></thead>
+<tbody id="t_data" style="display:block; overflow-y:scroll;"></tbody>
+</table>
+{% endblock %}
+
+{% block head%}
+<style>
+.top_left_cell{ min-width:100px; max-width:100px; padding:0; border:1px solid #eee; }
+.header_cell{ line-height: 1.1; min-width:100px; max-width:100px; padding:5px; border:1px solid #eee; }
+.name_cell{ min-width:100px; max-width:100px; padding:0; vertical-align:middle; border:1px solid #eee; }
+.data_cell{ text-align:center; vertical-align:middle; line-height:1.1; word-break:break-all; min-width:100px;
+    max-width:100px; padding:5px; border:1px solid #eee; }
+</style>
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript" src="{% static 'js/attendance_table.js' %}"></script >
+
+<script>
+var dowChars = '日月火水木金土';
+
+// View からもらうデータ
+// 稽古のリスト
+rhsls = JSON.parse('{{ rhsls|safe }}');
+// 役者のリスト
+actrs = JSON.parse('{{ actrs|safe }}');
+// 役者ごとの出欠の、稽古のリストに対応するリスト
+actr_atnds = JSON.parse('{{ actr_atnds|safe }}');
+
+
+// init();
+draw();
+</script>
+{% endblock %}
