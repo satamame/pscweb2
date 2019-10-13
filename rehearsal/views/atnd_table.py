@@ -3,7 +3,7 @@ from operator import attrgetter
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.core.exceptions import PermissionDenied
-from rehearsal.models import Rehearsal, Actor, Attendance
+from rehearsal.models import Rehearsal, Actor, Attendance, Character, Scene, Appearance
 from .func import *
 
 
@@ -49,9 +49,10 @@ class AtndTable(LoginRequiredMixin, TemplateView):
             'name': actr.name,
             'short_name': actr.get_short_name()
         } for actr in actors]
+        
         context['actrs'] = json.dumps(actr_list)
         
-        # 役者ごとの出欠の、稽古リストに対応するリスト
+        # 役者ごとの出欠の、稽古リストに対応するリスト (3次元配列)
         attendances = Attendance.objects.filter(actor__production__pk=prod_id)
         actrs_rhsl_atnds = []
         for actor in actors:
@@ -77,7 +78,54 @@ class AtndTable(LoginRequiredMixin, TemplateView):
                     )
                 rhsl_attnds.append(atnds)
             actrs_rhsl_atnds.append(rhsl_attnds)
+        
         context['actr_atnds'] = json.dumps(actrs_rhsl_atnds)
         
-        return context
+        # 登場人物のリスト
+        characters = Character.objects.filter(production__pk=prod_id)\
+            .order_by('sortkey')
+        chrs = []
+        for character in characters:
+            # 配役が actors の何番目かを取得
+            if character.cast in actors:
+                actr_idx = list(actors).index(character.cast)
+            else:
+                # 配役がなければ -1
+                actr_idx = -1
+            chrs.append({
+                'name': character.name,
+                'short_name': character.short_name,
+                'cast_idx': actr_idx
+            })
+        
+        context['chrs'] = json.dumps(chrs)
+        
+        # シーン名リスト
+        scenes = Scene.objects.filter(production__pk=prod_id)\
+            .order_by('sortkey')
+        context['scenes'] = json.dumps([scn.name for scn in scenes])
 
+        # シーンごとの登場人物とセリフ数のリスト
+        appearances = Appearance.objects.filter(scene__production__pk=prod_id)
+        scenes_chr_apprs = []
+        for scene in scenes:
+            # シーン単品での出番のリスト
+            scene_apprs = [appr for appr in appearances if appr.scene == scene]
+            # 有効なセリフ数の平均値
+            avrg_lines_mun = Appearance.average_lines_num(scene_apprs)
+            # そのシーンに出ている人物のセリフ数のリスト
+            chr_apprs = []
+            for chr_idx, character in enumerate(characters):
+                apprs = [appr for appr in scene_apprs if appr.character == character]
+                if len(apprs) > 0:
+                    # セリフ数 (自動なら平均値)
+                    lines_num = avrg_lines_mun if apprs[0].lines_auto else apprs[0].lines_num
+                    chr_apprs.append({
+                        'chr_idx': chr_idx,
+                        'lines_num': lines_num
+                    })
+            scenes_chr_apprs.append(chr_apprs)
+        
+        context['scenes_chr_apprs'] = json.dumps(scenes_chr_apprs)
+        
+        return context

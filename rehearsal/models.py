@@ -190,6 +190,29 @@ class Appearance(models.Model):
     def __str__(self):
         # ex. 'シーン1,沙悟浄'
         return '{},{}'.format(self.scene, self.character)
+    
+    @classmethod
+    def average_lines_num_in_scene(cls, scene_id:int) -> float:
+        '''あるシーンのセリフ数の平均値を返す
+        
+        Parameters
+        ----------
+        scene_id : シーンの id
+        '''
+        appearances = cls.objects.filter(scene__pk=scene_id)
+        return Appearance.average_lines_num(appearances)
+    
+    @staticmethod
+    def average_lines_num(appearances, default=1) -> float:
+        '''Appearance のリスト (またはイテラブル) のセリフ数の平均値を返す
+        
+        セリフ数が「自動」でないレコードがなければ、default を返す
+        '''
+        # 「自動」でないセリフ数のリスト
+        lines_nums = [
+            appr.lines_num for appr in appearances if not appr.lines_auto]
+        return sum(lines_nums) / len(lines_nums) if len(lines_nums) > 0\
+            else default
 
 
 class ScnComment(models.Model):

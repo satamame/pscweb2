@@ -44,57 +44,36 @@ class ApprTable(LoginRequiredMixin, TemplateView):
         actors = Actor.objects.filter(production__pk=prod_id)
         context['cast'] = json.dumps([actr.get_short_name() for actr in actors])
         
-        # 各シーンの登場人物の出番 (セリフ数) のリスト
+        # 各シーンの登場人物ごとの出番 (セリフ数) のリスト
         appearances = Appearance.objects.filter(scene__production__pk=prod_id)
         scenes_chr_apprs = []
         for scene in scenes:
+            # シーン単品での出番のリスト
             scene_apprs = [appr for appr in appearances if appr.scene == scene]
-            # とりあえず人数分のリストを作る
+            # 有効なセリフ数の平均値
+            avrg_lines_mun = Appearance.average_lines_num(scene_apprs)
+            # そのシーンの、登場人物全員分のセリフ数のリスト
             chr_apprs = []
             for character in characters:
                 apprs = [appr for appr in scene_apprs if appr.character == character]
                 if len(apprs) > 0:
-                    chr_apprs.append(apprs[0])
-                else:
-                    # 出番のないところには None を入れておく
-                    chr_apprs.append(None)
-            
-            # 出番のある人だけのリスト
-            valid_apprs = [appr for appr in chr_apprs if appr]
-            appr_count = len(valid_apprs)
-            # セリフ数が「自動」でない人だけのリスト
-            line_num_apprs = [appr for appr in valid_apprs if not appr.lines_auto]
-            # シーン内のセリフ数の合計
-            lines_sum = sum([appr.lines_num for appr in line_num_apprs])
-            # セリフ数が自動でない人がいればセリフ数の平均を取っておく
-            if len(line_num_apprs) > 0:
-                mean = lines_sum / len(line_num_apprs)
-            else:
-                mean = 1
-            
-            # このシーンのセリフ数のリスト
-            scn_apprs = []
-            for appr in chr_apprs:
-                if appr:
-                    # セリフ数が自動なら平均値を入れる
-                    if appr.lines_auto:
-                        scn_apprs.append(mean)
-                    else:
-                        scn_apprs.append(appr.lines_num)
+                    # セリフ数 (自動なら平均値)
+                    chr_apprs.append(
+                        avrg_lines_mun if apprs[0].lines_auto else apprs[0].lines_num)
                 else:
                     # 出番がないなら -1 を入れる
-                    scn_apprs.append(-1)
-            
-            scenes_chr_apprs.append(scn_apprs)
+                    chr_apprs.append(-1)
+            scenes_chr_apprs.append(chr_apprs)
+        
         context['chr_apprs'] = json.dumps(scenes_chr_apprs)
         
         # 各シーンの役者の出番 (セリフ数) のリスト
         cast_for_chrs = []
         # まず、各登場人物の配役が actors の何番目にあるかのリストを作る
         for character in characters:
-            try:
+            if character.cast in actors:
                 actr_idx = list(actors).index(character.cast)
-            except ValueError:
+            else:
                 # 配役がなければ -1
                 actr_idx = -1
             cast_for_chrs.append(actr_idx)
@@ -120,6 +99,7 @@ class ApprTable(LoginRequiredMixin, TemplateView):
                 else:
                     actr_apprs.append(-1)
             scenes_cast_apprs.append(actr_apprs)
+        
         context['cast_apprs'] = json.dumps(scenes_cast_apprs)
         
         return context

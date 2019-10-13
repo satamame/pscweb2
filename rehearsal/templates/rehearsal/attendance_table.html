@@ -7,9 +7,11 @@
 出欠表
 </h1>
 
-<!-- p>
-名前 <input id="name_keyword" type="text" />
-</p -->
+<p>
+シーン <select id="scene_menu"></select>
+<input type="button" value="適用" onClick="draw();">
+<input type="button" value="リセット" onClick="init(); draw();">
+</p>
 
 <table style="border:1px solid #eee;">
 <thead id="t_header" style="display:block;"></thead>
@@ -40,9 +42,15 @@ rhsls = JSON.parse('{{ rhsls|safe }}');
 actrs = JSON.parse('{{ actrs|safe }}');
 // 役者ごとの出欠の、稽古のリストに対応するリスト
 actr_atnds = JSON.parse('{{ actr_atnds|safe }}');
+// 登場人物のリスト
+chrs = JSON.parse('{{ chrs|safe }}');
+// シーン名のリスト
+scenes = JSON.parse('{{ scenes|safe }}');
+// シーンごとの登場人物とセリフ数のリスト
+scenes_chr_apprs = JSON.parse('{{ scenes_chr_apprs|safe }}');
 
-
-// init();
+init_scene_menu();
+init();
 draw();
 </script>
 {% endblock %}

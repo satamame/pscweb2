@@ -12,12 +12,12 @@ var chr_apprs;  // シーンごとの、登場人物ごとのセリフ数
 var cast;       // 役者名の配列
 var cast_apprs; // シーンごとの、役者ごとのセリフ数
 
-// フィルタやソートのための変数
-var scn_keyword;
-var by_cast;
-var selected_scn;
-var chr_order;
-var cast_order;
+// フィルタやソートのためのグローバル変数
+var scn_pattern;    // シーンをフィルタする時のパターン
+var by_cast;        // 役でなく役者で表示
+var selected_scn;   // 選択されたシーン
+var chr_order;      // シーンが選択された場合の登場人物の表示順
+var cast_order;     // シーンが選択された場合の役者の表示順
 
 // 定数 (色)
 var scn_btn_color = "aliceblue";
@@ -28,7 +28,6 @@ var cell_color_selected = "lightcyan";
 
 // 初期化
 function init(){
-    scn_pattern = ".*";
     by_cast = false;
     selected_scn = -1;
     chr_order = Array.from(chrs, (_, n) => {return n});
