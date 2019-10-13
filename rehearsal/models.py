@@ -75,11 +75,11 @@ class Scene(models.Model):
     progress = models.IntegerField('完成度', default=0,
         validators=[MinValueValidator(0), MaxValueValidator(100)])
     PRIORITY_CHOICES = (
-        (1, '最高'),
-        (2, '高'),
-        (3, '-'),
-        (4, '低'),
-        (5, '最低'),
+        (1, '1 (最高)'),
+        (2, '2 (高)'),
+        (3, '3'),
+        (4, '4 (低)'),
+        (5, '5 (最低)'),
     )
     priority = models.IntegerField('優先度', default=3,
         choices=PRIORITY_CHOICES)

@@ -12,25 +12,58 @@
 <div>&nbsp;</div>
 {% endif %}
 
+<div id="scenes">
 <table>
+<thead>
     <tr>
-        <th>順番</th>
+        <th class="sort" data-sort="sortkey">順番</th>
         <th>シーン名</th>
-        <th>完成度</th>
-        <th>優先度</th>
+        <th class="sort" data-sort="progress">完成度</th>
+        <th class="sort" data-sort="priority">優先度</th>
         <th>説明</th>
     </tr>
+</thead>
+<tbody class="list">
     {% for item in object_list %}
     <tr>
-        <td>{{ item.sortkey }}</td>
+        <td class="sortkey">{{ item.sortkey }}</td>
         <td>
             <a href="{% url 'rehearsal:scn_detail' pk=item.id %}">
             {{ item.name }}</a>
         </td>
-        <td>{{ item.progress }}</td>
-        <td>{{ item.get_priority_display }}</td>
+        <td class="progress">{{ item.progress }}</td>
+        <td class="priority">{{ item.get_priority_display }}</td>
         <td>{{ item.description }}</td>
     </tr>
     {% endfor %}
+</tbody>
 </table>
+</div>
+{% endblock %}
+
+
+{% block head %}
+<style>
+.sort {
+    color: #447e9b;
+    cursor: pointer;
+}
+.sort.desc:after {
+    content:"▼";
+}
+.sort.asc:after {
+    content:"▲";
+}
+</style>
+{% endblock %}
+
+
+{% block javascript %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+<script>
+var options = {
+  valueNames: [ 'sortkey', 'progress', 'priority' ]
+};
+var userList = new List('scenes', options);
+</script>
 {% endblock %}
