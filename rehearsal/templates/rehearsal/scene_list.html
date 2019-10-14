@@ -21,6 +21,7 @@
         <th class="sort" data-sort="progress">完成度</th>
         <th class="sort" data-sort="priority">優先度</th>
         <th>説明</th>
+        <th>メモ</th>
     </tr>
 </thead>
 <tbody class="list">
@@ -34,6 +35,7 @@
         <td class="progress">{{ item.progress }}</td>
         <td class="priority">{{ item.get_priority_display }}</td>
         <td>{{ item.description }}</td>
+        <td>{{ item.note }}</td>
     </tr>
     {% endfor %}
 </tbody>
