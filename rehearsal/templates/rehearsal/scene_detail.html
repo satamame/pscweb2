@@ -25,7 +25,7 @@
 </table>
 
 <details>
-<summary class="sectionheader headline">出番</summary>
+<summary class="sectionheader headline" style="cursor:pointer; outline:none;">出番</summary>
 <div align="right">
     {% if view.prod_user.is_owner or view.prod_user.is_editor %}
     <a href="{% url 'rehearsal:scn_appr_create' scn_id=object.id %}" class="addlink">追加</a>

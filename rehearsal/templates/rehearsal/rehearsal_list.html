@@ -28,7 +28,15 @@
         </td>
         <td>{{ item.start_time }}</td>
         <td>{{ item.end_time }}</td>
-        <td>{{ item.place }}</td>
+        {% if item.place %}
+            {% if item.place.facility.url %}
+                <td><a href="{{item.place.facility.url}}" target="_blank">{{ item.place }}</a></td>
+            {% else %}
+                <td>{{ item.place }}</td>
+            {% endif %}
+        {% else %}
+            <td>未定</td>
+        {% endif %}
         <td>{{ item.note }}</td>
     </tr>
     {% endfor %}
