@@ -22,6 +22,7 @@
         <th class="sort" data-sort="priority">優先度</th>
         <th>説明</th>
         <th>メモ</th>
+        <th>出番</th>
     </tr>
 </thead>
 <tbody class="list">
@@ -36,6 +37,7 @@
         <td class="priority">{{ item.get_priority_display }}</td>
         <td>{{ item.description }}</td>
         <td>{{ item.note }}</td>
+        <td>{{ item.appr_chars }}</td>
     </tr>
     {% endfor %}
 </tbody>

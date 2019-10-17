@@ -1,3 +1,4 @@
+from operator import attrgetter
 from django.shortcuts import render
 from django.views.generic import ListView, TemplateView, DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -283,8 +284,20 @@ class ScnList(ProdBaseListView):
         '''リストに表示するレコードをフィルタする
         '''
         prod_id=self.kwargs['prod_id']
-        return Scene.objects.filter(production__pk=prod_id)\
+        qset = Scene.objects.filter(production__pk=prod_id)\
             .order_by('sortkey',)
+            
+        # 出番リストを各シーンのプロパティとして追加
+        apprs = Appearance.objects.filter(scene__production__pk=prod_id)
+        for scene in qset:
+            appr_list = sorted(
+                [appr for appr in apprs if appr.scene == scene],
+                key=lambda x: (x.character.sortkey,)
+            )
+            scene.appr_chars = ', '.join(
+                [str(appr.character) for appr in appr_list])
+        
+        return qset
 
 
 class ScnCreate(ProdBaseCreateView):
