@@ -294,7 +294,7 @@ class ScnList(ProdBaseListView):
                 [appr for appr in apprs if appr.scene == scene],
                 key=lambda x: (x.character.sortkey,)
             )
-            scene.appr_chars = ', '.join(
+            scene.appr_chrs = ', '.join(
                 [str(appr.character) for appr in appr_list])
         
         return qset

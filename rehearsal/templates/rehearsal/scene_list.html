@@ -12,6 +12,11 @@
 <div>&nbsp;</div>
 {% endif %}
 
+<p>
+<input id="chk_note" type="checkbox" onchange="show_note();"> メモ
+<input id="chk_appr_chrs" type="checkbox" onchange="show_appr_chrs();"> 出番
+</p>
+
 <div id="scenes">
 <table>
 <thead>
@@ -21,8 +26,8 @@
         <th class="sort" data-sort="progress">完成度</th>
         <th class="sort" data-sort="priority">優先度</th>
         <th>説明</th>
-        <th>メモ</th>
-        <th>出番</th>
+        <th class="note" style="display:none;">メモ</th>
+        <th class="appr_chrs" style="display:none;">出番</th>
     </tr>
 </thead>
 <tbody class="list">
@@ -36,8 +41,8 @@
         <td class="progress">{{ item.progress }}</td>
         <td class="priority">{{ item.get_priority_display }}</td>
         <td>{{ item.description }}</td>
-        <td>{{ item.note }}</td>
-        <td>{{ item.appr_chars }}</td>
+        <td class="note" style="display:none;">{{ item.note }}</td>
+        <td class="appr_chrs" style="display:none;">{{ item.appr_chrs }}</td>
     </tr>
     {% endfor %}
 </tbody>
@@ -69,5 +74,27 @@ var options = {
   valueNames: [ 'sortkey', 'progress', 'priority' ]
 };
 var userList = new List('scenes', options);
+
+// メモを表示/非表示する
+function show_note() {
+    var elements = document.getElementsByClassName("note");
+    for (i = 0; i < elements.length; i++){
+        if (document.getElementById("chk_note").checked)
+            elements[i].style.display = "table-cell";
+        else
+            elements[i].style.display = "none";
+    }
+}
+
+// 出番を表示/非表示する
+function show_appr_chrs() {
+    var elements = document.getElementsByClassName("appr_chrs");
+    for (i = 0; i < elements.length; i++){
+        if (document.getElementById("chk_appr_chrs").checked)
+            elements[i].style.display = "table-cell";
+        else
+            elements[i].style.display = "none";
+    }
+}
 </script>
 {% endblock %}
