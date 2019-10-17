@@ -284,20 +284,17 @@ class ScnList(ProdBaseListView):
         '''リストに表示するレコードをフィルタする
         '''
         prod_id=self.kwargs['prod_id']
-        qset = Scene.objects.filter(production__pk=prod_id)\
+        scenes = Scene.objects.filter(production__pk=prod_id)\
             .order_by('sortkey',)
             
         # 出番リストを各シーンのプロパティとして追加
-        apprs = Appearance.objects.filter(scene__production__pk=prod_id)
-        for scene in qset:
-            appr_list = sorted(
-                [appr for appr in apprs if appr.scene == scene],
-                key=lambda x: (x.character.sortkey,)
-            )
-            scene.appr_chrs = ', '.join(
-                [str(appr.character) for appr in appr_list])
+        for scene in scenes:
+            apprs = Appearance.objects.filter(scene=scene)\
+                .order_by('character__sortkey')
+            scene.apprs = ', '.join(
+                [str(appr.character) for appr in apprs])
         
-        return qset
+        return scenes
 
 
 class ScnCreate(ProdBaseCreateView):
