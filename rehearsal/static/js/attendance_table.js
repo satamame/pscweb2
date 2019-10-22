@@ -122,8 +122,8 @@ function draw(){
         actr = actrs[actr_idx];
         
         // 役者名のセル
-        tbody += "<tr><th class=\"name_cell\" style=\"background-color:"
-            + name_cell_color + ";\">" + actr['short_name'] + "</th>";
+        tbody += "<tr><td class=\"name_cell\" style=\"background-color:"
+            + name_cell_color + ";\">" + actr['short_name'] + "</td>";
         
         // 出欠データ
         actr_atnds[actr_idx].forEach((rhsl_atnds) => {

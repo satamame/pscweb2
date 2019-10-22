@@ -13,19 +13,30 @@
 <input type="button" value="リセット" onClick="init(); draw();">
 </p>
 
-<table style="border:1px solid #eee;">
-<thead id="t_header" style="display:block;"></thead>
-<tbody id="t_data" style="display:block; overflow-y:scroll;"></tbody>
+<div class="table-scroll-host" style="outline:1px solid #eee; max-width:100%; max-height:600px;">
+<table style="border:0;">
+<thead id="t_header" style="border:0;"></thead>
+<tbody id="t_data" style="border:0;"></tbody>
 </table>
+</div>
 {% endblock %}
 
 {% block head%}
 <style>
-.top_left_cell{ min-width:70px; max-width:70px; padding:0; border:1px solid #eee; }
-.header_cell{ line-height: 1.1; min-width:90px; max-width:90px; padding:5px; border:1px solid #eee; }
-.name_cell{ min-width:70px; max-width:70px; padding:0; vertical-align:middle; border:1px solid #eee; }
+/* Table Scroll */
+.table-scroll-host { overflow:scroll; }
+table th { position:sticky; top:0; }
+table th:nth-child(1) { position:sticky; left:0; z-index:2; }
+table td:nth-child(1) { position:sticky; left:0; z-index:1; }
+
+/* Cells */
+.top_left_cell{ min-width:50px; max-width:70px; padding:2px 3px;
+    border:0; outline:1px solid #eee; }
+.header_cell{ line-height: 1.1; min-width:90px; max-width:90px; padding:2px 3px;
+    border:0; outline:1px solid #eee; }
+.name_cell{ padding:2px 3px; vertical-align:middle; border:0; outline:1px solid #eee; }
 .data_cell{ text-align:center; vertical-align:middle; line-height:1.1; word-break:break-all;
-    min-width:90px; max-width:90px; padding:5px; border:1px solid #eee; }
+    padding:2px 3px; border:1px solid #eee; }
 </style>
 {% endblock %}
 

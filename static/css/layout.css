@@ -7,6 +7,7 @@ header {
     right: 0;  /* 固定する位置 */
     color: rgb(255, 255, 204);
     background: rgb(65, 118, 144);
+    z-index: 99;
 }
 
 header a:link, header a:visited {
