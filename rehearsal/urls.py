@@ -3,9 +3,14 @@ from . import views
 
 app_name = 'rehearsal'
 urlpatterns = [
+    # ----------------------------------------------------------------
+    # トップ
     
     # /rhsl/1/ -> Rehearsal Top for Production #1
     path('<int:prod_id>/', views.RhslTop.as_view(), name='rhsl_top'),
+    
+    # ----------------------------------------------------------------
+    # 稽古
     
     # /rhsl/rhsl_list/1/ -> Rehearsal List for Production #1
     path('rhsl_list/<int:prod_id>/', views.RhslList.as_view(),
@@ -23,6 +28,38 @@ urlpatterns = [
     path('rhsl_delete/<int:pk>/', views.RhslDelete.as_view(),
         name='rhsl_delete'),
     
+    # ----------------------------------------------------------------
+    # 稽古場
+    
+    # /rhsl/plc_list/1/ -> Place List for Production #1
+    path('plc_list/<int:prod_id>/', views.PlcList.as_view(),
+        name='plc_list'),
+    # /rhsl/plc_create/1/ -> Place Create for Facility #1
+    path('plc_create/<int:fclt_id>/', views.PlcCreate.as_view(),
+        name='plc_create'),
+    # /rhsl/plc_update/1/ -> Place #1 Update
+    path('plc_update/<int:pk>/', views.PlcUpdate.as_view(),
+        name='plc_update'),
+    # /rhsl/plc_delete/1/ -> Place #1 Delete
+    path('plc_delete/<int:pk>/', views.PlcDelete.as_view(),
+        name='plc_delete'),
+    
+    # ----------------------------------------------------------------
+    # 稽古場の施設
+    
+    # /rhsl/fclt_create/1/ -> Facility Create for Production #1
+    path('fclt_create/<int:prod_id>/', views.FcltCreate.as_view(),
+        name='fclt_create'),
+    # /rhsl/fclt_update/1/ -> Facility #1 Update
+    path('fclt_update/<int:pk>/', views.FcltUpdate.as_view(),
+        name='fclt_update'),
+    # /rhsl/fclt_delete/1/ -> Facility #1 Delete
+    path('fclt_delete/<int:pk>/', views.FcltDelete.as_view(),
+        name='fclt_delete'),
+    
+    # ----------------------------------------------------------------
+    # シーン
+    
     # /rhsl/scn_list/1/ -> Scene List for Production #1
     path('scn_list/<int:prod_id>/', views.ScnList.as_view(), name='scn_list'),
     # /rhsl/scn_create/1/ -> Scene Create for Production #1
@@ -38,6 +75,9 @@ urlpatterns = [
     path('scn_delete/<int:pk>/', views.ScnDelete.as_view(),
         name='scn_delete'),
 
+    # ----------------------------------------------------------------
+    # 登場人物
+    
     # /rhsl/chr_list/1/ -> Character List for Production #1
     path('chr_list/<int:prod_id>/', views.ChrList.as_view(), name='chr_list'),
     # /rhsl/chr_create/1/ -> Character Create for Production #1
@@ -53,6 +93,9 @@ urlpatterns = [
     path('chr_delete/<int:pk>/', views.ChrDelete.as_view(),
         name='chr_delete'),
 
+    # ----------------------------------------------------------------
+    # 役者
+    
     # /rhsl/actr_list/1/ -> Actor List for Production #1
     path('actr_list/<int:prod_id>/', views.ActrList.as_view(), name='actr_list'),
     # /rhsl/actr_create/1/ -> Actor Create for Production #1
@@ -68,6 +111,9 @@ urlpatterns = [
     path('actr_delete/<int:pk>/', views.ActrDelete.as_view(),
         name='actr_delete'),
 
+    # ----------------------------------------------------------------
+    # 出番
+    
     # /rhsl/scn_appr_create/1/ -> Appearance Create for Scene #1
     path('scn_appr_create/<int:scn_id>/', views.ScnApprCreate.as_view(),
         name='scn_appr_create'),
@@ -81,6 +127,9 @@ urlpatterns = [
     path('appr_delete/<int:pk>/<str:from>/', views.ApprDelete.as_view(),
         name='appr_delete'),
 
+    # ----------------------------------------------------------------
+    # シーンコメント
+    
     # /rhsl/scn_cmt_create/1/ -> ScnComment Create for Scene #1
     path('scn_cmt_create/<int:scn_id>/', views.ScnCmtCreate.as_view(),
         name='scn_cmt_create'),
@@ -90,6 +139,9 @@ urlpatterns = [
     # /rhsl/scn_cmt_delete/1/ -> ScnComment #1 Delete
     path('scn_cmt_delete/<int:pk>/', views.ScnCmtDelete.as_view(),
         name='scn_cmt_delete'),
+    
+    # ----------------------------------------------------------------
+    # 参加時間
     
     # /rhsl/atnd_create/1/2/{actr|rhsl}/
     #   -> Attendance Create for Actor #2 in Rehearsal #1
@@ -102,9 +154,15 @@ urlpatterns = [
     path('atnd_delete/<int:pk>/<str:from>/', views.AtndDelete.as_view(),
         name='atnd_delete'),
     
+    # ----------------------------------------------------------------
+    # 香盤表
+    
     # /rhsl/appr_table/1/ -> Appearance table for Production #1
     path('appr_table/<int:prod_id>/', views.ApprTable.as_view(),
         name='appr_table'),
+
+    # ----------------------------------------------------------------
+    # 出欠表
 
     # /rhsl/atnd_table/1/ -> Attendance table for Production #1
     path('atnd_table/<int:prod_id>/', views.AtndTable.as_view(),

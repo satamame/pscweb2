@@ -273,6 +273,232 @@ class RhslDelete(ProdBaseDeleteView):
         return url
 
 
+class PlcList(ProdBaseListView):
+    '''Place のリストビュー
+
+    Template 名: place_list
+    '''
+    # 施設ごとにリストにするので、モデルは Facility
+    model = Facility
+    template_name = 'rehearsal/place_list.html'
+    
+    def get_queryset(self):
+        '''リストに表示するレコードをフィルタする
+        '''
+        prod_id=self.kwargs['prod_id']
+        return Facility.objects.filter(production__pk=prod_id)
+
+
+class PlcCreate(LoginRequiredMixin, CreateView):
+    '''Facility を指定して Place を追加するビュー
+    
+    Template 名: place_form (default)
+    '''
+    model = Place
+    fields = ('room_name', 'note')
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # facility, production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.facility = self.get_facility_from_request()
+        self.production = self.facility.production
+
+        # 編集権を検査してアクセス中の公演ユーザを取得する
+        prod_user = test_edit_permission(self, self.production.id)
+        
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # facility を view の属性として持っておく
+        # 保存時にインスタンスにセットするため
+        self.facility = self.get_facility_from_request()
+        
+        # 編集権を検査する
+        test_edit_permission(self, self.facility.production.id)
+        
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        '''バリデーションを通った時
+        '''
+        # 追加しようとするレコードの facility をセット
+        instance = form.save(commit=False)
+        instance.facility = self.facility
+        
+        messages.success(self.request, str(instance) + " を追加しました。")
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        '''追加に成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.facility.production.id
+        url = reverse_lazy('rehearsal:plc_list', kwargs={'prod_id': prod_id})
+        return url
+    
+    def form_invalid(self, form):
+        '''追加に失敗した時
+        '''
+        messages.warning(self.request, "追加できませんでした。")
+        return super().form_invalid(form)
+    
+    def get_facility_from_request(self):
+        '''リクエストから facility を取得して返す
+        
+        facility がなければ 404 エラーを投げる
+        '''
+        facilities = Facility.objects.filter(pk=self.kwargs['fclt_id'])
+        if len(facilities) < 1:
+            raise Http404
+        return facilities[0]
+
+
+class PlcUpdate(LoginRequiredMixin, UpdateView):
+    '''Place を更新する時のビュー
+    
+    Template 名: place_form (default)
+    '''
+    model = Place
+    fields = ('room_name', 'note')
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # facility, production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.facility = self.get_object().facility
+        self.production = self.facility.production
+
+        # 編集権を検査してアクセス中の公演ユーザを取得する
+        prod_user = test_edit_permission(self, self.production.id)
+        
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # facility を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.facility = self.get_object().facility
+        
+        # 編集権を検査する
+        test_edit_permission(self, self.facility.production.id)
+        
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        '''バリデーションを通った時
+        '''
+        messages.success(self.request, str(form.instance) + " を更新しました。")
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        '''更新に成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.facility.production.id
+        url = reverse_lazy('rehearsal:plc_list', kwargs={'prod_id': prod_id})
+        return url
+    
+    def form_invalid(self, form):
+        '''更新に失敗した時
+        '''
+        messages.warning(self.request, "更新できませんでした。")
+        return super().form_invalid(form)
+
+
+class PlcDelete(LoginRequiredMixin, DeleteView):
+    '''Place の削除ビュー
+    
+    Template 名: place_delete
+    '''
+    model = Place
+    template_name_suffix = '_delete'
+    
+    def get(self, request, *args, **kwargs):
+        '''表示時のリクエストを受けるハンドラ
+        '''
+        # facility, production を view の属性として持っておく
+        # テンプレートで固定要素として表示するため
+        self.facility = self.get_object().facility
+        self.production = self.facility.production
+
+        # 編集権を検査してアクセス中の公演ユーザを取得する
+        prod_user = test_edit_permission(self, self.production.id)
+        
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # production を view の属性として持っておく
+        # 遷移先を決めるのに使うため
+        self.production = self.get_object().facility.production
+        
+        # 編集権を検査する
+        test_edit_permission(self, self.production.id)
+        
+        return super().post(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        '''更新に成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.production.id
+        url = reverse_lazy('rehearsal:plc_list', kwargs={'prod_id': prod_id})
+        return url
+    
+    def delete(self, request, *args, **kwargs):
+        '''削除した時のメッセージ
+        '''
+        result = super().delete(request, *args, **kwargs)
+        messages.success(
+            self.request, str(self.object) + " を削除しました。")
+        return result
+
+
+class FcltCreate(ProdBaseCreateView):
+    '''Facility の追加ビュー
+    '''
+    model = Facility
+    fields = ('name', 'url', 'note')
+    
+    def get_success_url(self):
+        '''追加に成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.production.id
+        url = reverse_lazy('rehearsal:plc_list', kwargs={'prod_id': prod_id})
+        return url
+
+
+class FcltUpdate(ProdBaseUpdateView):
+    '''Facility の更新ビュー
+    '''
+    model = Facility
+    fields = ('name', 'url', 'note')
+    
+    def get_success_url(self):
+        '''追加に成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.object.production.id
+        url = reverse_lazy('rehearsal:plc_list', kwargs={'prod_id': prod_id})
+        return url
+
+
+class FcltDelete(ProdBaseDeleteView):
+    '''Facility の削除ビュー
+    '''
+    model = Facility
+    
+    def get_success_url(self):
+        '''削除に成功した時の遷移先を動的に与える
+        '''
+        prod_id = self.object.production.id
+        url = reverse_lazy('rehearsal:plc_list', kwargs={'prod_id': prod_id})
+        return url
+
+
 class ScnList(ProdBaseListView):
     '''Scene のリストビュー
 
@@ -783,8 +1009,7 @@ class ApprUpdate(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         '''バリデーションを通った時
         '''
-        messages.success(self.request, str(form.instance)
-            + " を更新しました。")
+        messages.success(self.request, str(form.instance) + " を更新しました。")
         return super().form_valid(form)
     
     def get_success_url(self):
@@ -1265,8 +1490,7 @@ class AtndUpdate(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         '''バリデーションを通った時
         '''
-        messages.success(self.request, str(form.instance)
-            + " を更新しました。")
+        messages.success(self.request, str(form.instance) + " を更新しました。")
         return super().form_valid(form)
     
     def get_success_url(self):

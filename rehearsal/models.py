@@ -16,6 +16,7 @@ class Facility(models.Model):
     
     class Meta:
         verbose_name = verbose_name_plural = '稽古場の施設'
+        ordering = ['name']
     
     def __str__(self):
         return self.name
@@ -31,6 +32,7 @@ class Place(models.Model):
     
     class Meta:
         verbose_name = verbose_name_plural = '稽古場'
+        ordering = ['facility__name', 'room_name']
     
     def __str__(self):
         # ex. '○○公民館,会議室1'

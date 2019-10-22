@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="margin: 0;">
+<a href="{% url 'rehearsal:rhsl_top' prod_id=prod_id %}">◀</a>
+稽古場一覧
+</h1>
+
+{% if view.prod_user.is_owner or view.prod_user.is_editor %}
+<div align="right"><a href="{% url 'rehearsal:fclt_create' prod_id=prod_id %}" class="addlink">施設を追加</a></div>
+{% else %}
+<div>&nbsp;</div>
+{% endif %}
+
+<table>
+{% for facility in object_list %}
+<tr style="background-color:#fdfbf8;">
+<td colspan="2">
+{% if facility.url %}
+    <a href="{{facility.url}}" target="_blank">{{ facility }}</a>
+{% else %}
+    {{ facility }}
+{% endif %}
+</td>
+<td>{{ facility.note }}</td>
+{% if view.prod_user.is_owner or view.prod_user.is_editor %}
+<td>
+<a href="{% url 'rehearsal:fclt_update' pk=facility.id %}" class="changelink">編集</a>
+<a href="{% url 'rehearsal:plc_create' fclt_id=facility.id %}" class="addlink">部屋を追加</a>
+</td>
+{% endif %}
+</tr>
+{% for place in facility.place_set.all %}
+    <tr><td></td>
+    <td>{{ place.room_name }}</td>
+    <td>{{ place.note }}</td>
+    {% if view.prod_user.is_owner or view.prod_user.is_editor %}
+    <td><a href="{% url 'rehearsal:plc_update' pk=place.id %}" class="changelink">編集</a></td>
+    {% endif %}
+    </tr>
+{% endfor %}
+{% endfor %}
+</table>
+{% endblock %}

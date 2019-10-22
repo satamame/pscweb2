@@ -9,7 +9,9 @@
 <form method="post">{% csrf_token %}
     <p>この役者を削除しますか？</p>
     <input type="submit" value="削除する">
-    <input type="button" onclick="location.href='{% url 'rehearsal:actr_list' prod_id=object.production.id %}'" value="キャンセル">
+    <input type="button"
+        onclick="location.href='{% url 'rehearsal:actr_list' prod_id=object.production.id %}'"
+        value="キャンセル">
 </form>
 
 <table>
