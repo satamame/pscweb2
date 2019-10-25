@@ -55,6 +55,7 @@ class Rehearsal(models.Model):
     
     class Meta:
         verbose_name = verbose_name_plural = '稽古のコマ'
+        ordering = ['date', 'start_time']
     
     def __str__(self):
         # ex. '08/30,○○公民館,会議室1'
@@ -89,6 +90,7 @@ class Scene(models.Model):
     
     class Meta:
         verbose_name = verbose_name_plural = 'シーン'
+        ordering = ['sortkey']
     
     def __str__(self):
         return self.name
@@ -127,6 +129,7 @@ class Character(models.Model):
     
     class Meta:
         verbose_name = verbose_name_plural = '登場人物'
+        ordering = ['sortkey']
     
     def __str__(self):
         # ex. '沙悟浄(三橋)'

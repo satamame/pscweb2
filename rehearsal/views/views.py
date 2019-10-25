@@ -185,8 +185,7 @@ class RhslList(ProdBaseListView):
         '''リストに表示するレコードをフィルタする
         '''
         prod_id=self.kwargs['prod_id']
-        return Rehearsal.objects.filter(production__pk=prod_id)\
-            .order_by('date', 'start_time')
+        return Rehearsal.objects.filter(production__pk=prod_id)
 
 
 class RhslCreate(ProdBaseCreateView):
@@ -510,8 +509,7 @@ class ScnList(ProdBaseListView):
         '''リストに表示するレコードをフィルタする
         '''
         prod_id=self.kwargs['prod_id']
-        scenes = Scene.objects.filter(production__pk=prod_id)\
-            .order_by('sortkey',)
+        scenes = Scene.objects.filter(production__pk=prod_id)
             
         # 出番リストを各シーンのプロパティとして追加
         for scene in scenes:
@@ -601,8 +599,7 @@ class ChrList(ProdBaseListView):
         '''リストに表示するレコードをフィルタする
         '''
         prod_id=self.kwargs['prod_id']
-        return Character.objects.filter(production__pk=prod_id)\
-            .order_by('sortkey',)
+        return Character.objects.filter(production__pk=prod_id)
 
 
 class ChrCreate(ProdBaseCreateView):
