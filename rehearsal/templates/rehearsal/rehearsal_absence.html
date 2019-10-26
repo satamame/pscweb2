@@ -9,7 +9,8 @@
 
 <body style="margin: 10px;">
 
-<h2>{{ object.date|date:"m/d(D)" }}<br>{{ object.place }}</h2>
+<h2>{{ object.date|date:"m/d(D)" }} {{ object.start_time}}-{{object.end_time}}<br>
+{{ object.place }}</h2>
 
 <h3>欠席の人</h3>
 <ul>
@@ -25,5 +26,29 @@
 {% endfor %}
 </ul>
 
+<input type="button" onclick="copy();" value="クリップボードにコピー">
+
+<script>
+function copy(){
+    var str = "【欠席の人】\n{% for abs_actor in abs_list %}{{ abs_actor }}\n{% endfor %}";
+    {% if und_list %}
+    str += "\n【未定の人】\n{% for und_actor in und_list %}{{ und_actor }}\n{% endfor %}";
+    {% endif %}
+    
+    var listener = function(e){
+        e.clipboardData.setData("text/plain" , str);    
+        // 本来のイベントをキャンセル
+        e.preventDefault();
+        // リスナーを削除
+        document.removeEventListener("copy", listener);
+    }
+
+    // コピーイベントが発生したときに、クリップボードに書き込むようにしておく
+    document.addEventListener("copy" , listener);
+
+    // コピーイベントを起こす
+    document.execCommand("copy");
+}
+</script>
 </body>
 </html>
