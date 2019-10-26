@@ -28,6 +28,10 @@ urlpatterns = [
     path('rhsl_delete/<int:pk>/', views.RhslDelete.as_view(),
         name='rhsl_delete'),
     
+    # /rhsl/rhsl_absence/1/ -> Asence list for Rehearsal #1
+    path('rhsl_absence/<int:pk>/', views.RhslAbsence.as_view(),
+        name='rhsl_absence'),
+    
     # ----------------------------------------------------------------
     # 稽古場
     

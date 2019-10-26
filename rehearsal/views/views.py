@@ -272,6 +272,37 @@ class RhslDelete(ProdBaseDeleteView):
         return url
 
 
+class RhslAbsence(ProdBaseDetailView):
+    '''Rehearsal の欠席・未定の人を表示するビュー
+    '''
+    model = Rehearsal
+    template_name_suffix = '_absence'
+    
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        context = super().get_context_data(**kwargs)
+        
+        # 欠席の人のリスト
+        atnds = self.get_object().attendance_set.order_by('actor__name')
+        abs_list = [atnd.actor for atnd in atnds if atnd.is_absent]
+        
+        context['abs_list'] = abs_list
+        
+        # 未定の人のリスト
+        atnd_actrs = [atnd.actor for atnd in atnds]
+        actors = Actor.objects.filter(production=self.get_object().production)\
+            .order_by('name')
+        
+        print(actors)
+        
+        und_list = [actor for actor in actors if actor not in atnd_actrs]
+        
+        context['und_list'] = und_list
+        
+        return context
+
+
 class PlcList(ProdBaseListView):
     '''Place のリストビュー
 
@@ -703,7 +734,7 @@ class ActrList(ProdBaseListView):
         '''
         prod_id=self.kwargs['prod_id']
         return Actor.objects.filter(production__pk=prod_id)\
-            .order_by('name',)
+            .order_by('name')
 
 
 class ActrCreate(ProdBaseCreateView):
