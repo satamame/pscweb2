@@ -513,8 +513,7 @@ class ScnList(ProdBaseListView):
             
         # 出番リストを各シーンのプロパティとして追加
         for scene in scenes:
-            apprs = Appearance.objects.filter(scene=scene)\
-                .order_by('character__sortkey')
+            apprs = scene.appearance_set.order_by('character__sortkey')
             scene.apprs = ', '.join(
                 [str(appr.character) for appr in apprs])
         
