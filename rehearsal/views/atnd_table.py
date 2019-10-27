@@ -32,8 +32,7 @@ class AtndTable(LoginRequiredMixin, TemplateView):
         context['prod_id'] = prod_id
         
         # 稽古リスト
-        rehearsals = Rehearsal.objects.filter(production__pk=prod_id)\
-            .order_by('date', 'start_time')
+        rehearsals = Rehearsal.objects.filter(production__pk=prod_id)
         rhsl_list = [{
             'place': str(rhsl.place),
             'date': rhsl.date.strftime('%Y-%m-%d'),
@@ -82,8 +81,7 @@ class AtndTable(LoginRequiredMixin, TemplateView):
         context['actr_atnds'] = json.dumps(actrs_rhsl_atnds)
         
         # 登場人物のリスト
-        characters = Character.objects.filter(production__pk=prod_id)\
-            .order_by('sortkey')
+        characters = Character.objects.filter(production__pk=prod_id)
         chrs = []
         for character in characters:
             # 配役が actors の何番目かを取得
@@ -101,8 +99,7 @@ class AtndTable(LoginRequiredMixin, TemplateView):
         context['chrs'] = json.dumps(chrs)
         
         # シーン名リスト
-        scenes = Scene.objects.filter(production__pk=prod_id)\
-            .order_by('sortkey')
+        scenes = Scene.objects.filter(production__pk=prod_id)
         context['scenes'] = json.dumps([scn.name for scn in scenes])
 
         # シーンごとの登場人物とセリフ数のリスト

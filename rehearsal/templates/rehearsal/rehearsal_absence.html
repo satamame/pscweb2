@@ -12,27 +12,45 @@
 <h2>{{ object.date|date:"m/d(D)" }} {{ object.start_time}}-{{object.end_time}}<br>
 {{ object.place }}</h2>
 
-<h3>欠席の人</h3>
+<h3>欠席</h3>
 <ul>
 {% for abs_actor in abs_list %}
 <li>{{ abs_actor }}</li>
 {% endfor %}
 </ul>
 
-<h3>未定の人</h3>
+<h3>部分参加</h3>
+<ul>
+{% for atnd in prt_atnds %}
+<li>{{ atnd }}</li>
+{% endfor %}
+</ul>
+
+<h3>未定</h3>
 <ul>
 {% for und_actor in und_list %}
 <li>{{ und_actor }}</li>
 {% endfor %}
 </ul>
 
-<input type="button" onclick="copy();" value="クリップボードにコピー">
+<input type="button" onclick="copy_close();" value="コピーして閉じる">
+<input type="button" onclick="window.close();" value="閉じる">
 
 <script>
-function copy(){
-    var str = "【欠席の人】\n{% for abs_actor in abs_list %}{{ abs_actor }}\n{% endfor %}";
+function copy_close(){
+    var str = "";
+    {% if abs_list %}
+    str += "欠席\n{% for abs_actor in abs_list %}{{ abs_actor }}\n{% endfor %}";
+    {% endif %}
+    
+    {% if prt_atnds %}
+    if (str != "") str += "\n";
+    str += "部分参加\n{% for prt_atnd in prt_atnds %}{{ prt_atnd }}\n{% endfor %}";
+    {% endif %}
+    
     {% if und_list %}
-    str += "\n【未定の人】\n{% for und_actor in und_list %}{{ und_actor }}\n{% endfor %}";
+    if (str != "") str += "\n";
+    str += "未定\n{% for und_actor in und_list %}{{ und_actor }}\n{% endfor %}";
     {% endif %}
     
     var listener = function(e){
@@ -41,6 +59,8 @@ function copy(){
         e.preventDefault();
         // リスナーを削除
         document.removeEventListener("copy", listener);
+        // 自分を閉じる
+        window.close();
     }
 
     // コピーイベントが発生したときに、クリップボードに書き込むようにしておく

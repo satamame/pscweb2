@@ -289,13 +289,29 @@ class RhslAbsence(ProdBaseDetailView):
         
         context['abs_list'] = abs_list
         
-        # 未定の人のリスト
-        atnd_actrs = [atnd.actor for atnd in atnds]
+        # 遅刻・早退の人のリスト
         actors = Actor.objects.filter(production=self.get_object().production)\
             .order_by('name')
+        atnd_actrs = [atnd.actor for atnd in atnds]
+        prt_atnds = []
+        for actor in actors:
+            # この稽古のこの役者の、全日でも欠席でもない参加時間
+            actr_atnds = sorted(
+                [atnd for atnd in atnds if atnd.actor == actor
+                    and not atnd.is_allday and not atnd.is_absent],
+                key=attrgetter('from_time')
+            )
+            # 参加時間があるなら追加
+            if actr_atnds:
+                actr_str = actor.name + " (" + ",".join(
+                    [a.from_time.strftime('%H:%M') + "-" + a.to_time.strftime('%H:%M')
+                        for a in actr_atnds]
+                ) + ")"
+                prt_atnds.append(actr_str)
         
-        print(actors)
+        context['prt_atnds'] = prt_atnds
         
+        # 未定の人のリスト
         und_list = [actor for actor in actors if actor not in atnd_actrs]
         
         context['und_list'] = und_list

@@ -20,12 +20,18 @@
     <tr><th>メモ</th><td>{{ object.note | urlize | linebreaksbr }}</td></tr>
 </table>
 
-<input type="button"
-    style="margin-top: 20px;"
-    onclick="window.open(
-        '{% url 'rehearsal:rhsl_absence' pk=object.id %}',
-        '欠席・未定の人',
-        'width=200,height=800,menubar=no,toolbar=no,location=no,status=no'
-    );"
+<input type="button" style="margin-top: 20px;" onclick="show_absence();"
     value="欠席・未定の人を見る">
+{% endblock %}
+
+{% block javascript %}
+<script>
+function show_absence(){
+    window.open(
+        "{% url 'rehearsal:rhsl_absence' pk=object.id %}",
+        "pscweb_absence",
+        "width=100,height=600,menubar=no,toolbar=no,location=no,status=no"
+    );
+}
+</script>
 {% endblock %}

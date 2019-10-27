@@ -31,13 +31,11 @@ class ApprTable(LoginRequiredMixin, TemplateView):
         context['prod_id'] = prod_id
         
         # シーン名リスト
-        scenes = Scene.objects.filter(production__pk=prod_id)\
-            .order_by('sortkey')
+        scenes = Scene.objects.filter(production__pk=prod_id)
         context['scenes'] = json.dumps([scn.name for scn in scenes])
         
         # 登場人物名リスト
-        characters = Character.objects.filter(production__pk=prod_id)\
-            .order_by('sortkey')
+        characters = Character.objects.filter(production__pk=prod_id)
         context['characters'] = json.dumps([chr.get_short_name() for chr in characters])
         
         # 役者名リスト
