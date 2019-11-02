@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from production.models import Production
 from rehearsal.models import Rehearsal, Scene, Place, Facility, Character, Actor,\
-    Appearance, ScnComment, Attendance
+    Appearance, ScnComment, Attendance, AtndChangeLog
 from rehearsal.forms import RhslForm, ScnApprForm, ChrApprForm, AtndForm
 from .func import *
 
@@ -757,8 +757,24 @@ class ActrCreate(ProdBaseCreateView):
     '''Actor の追加ビュー
     '''
     model = Actor
-    fields = ('name', 'short_name')
+    fields = ('name', 'short_name', 'prod_user')
     
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        # super で production はセットされる
+        context = super().get_context_data(**kwargs)
+        
+        # その公演のユーザのみ表示するようにする
+        prod_users = ProdUser.objects.filter(production=self.production)
+        # 選択肢を作成
+        choices = [('', '---------')]
+        choices.extend([(pu.id, str(pu)) for pu in prod_users])
+        # Form にセット (選択肢以外の値はエラーにしてくれる)
+        context['form'].fields['prod_user'].choices = choices
+        
+        return context
+
     def get_success_url(self):
         '''追加に成功した時の遷移先を動的に与える
         '''
@@ -771,7 +787,23 @@ class ActrUpdate(ProdBaseUpdateView):
     '''Actor の更新ビュー
     '''
     model = Actor
-    fields = ('name', 'short_name')
+    fields = ('name', 'short_name', 'prod_user')
+    
+    def get_context_data(self, **kwargs):
+        '''テンプレートに渡すパラメタを改変する
+        '''
+        # super で production はセットされる
+        context = super().get_context_data(**kwargs)
+        
+        # その公演のユーザのみ表示するようにする
+        prod_users = ProdUser.objects.filter(production=self.production)
+        # 選択肢を作成
+        choices = [('', '---------')]
+        choices.extend([(pu.id, str(pu)) for pu in prod_users])
+        # Form にセット (選択肢以外の値はエラーにしてくれる)
+        context['form'].fields['prod_user'].choices = choices
+        
+        return context
     
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
@@ -1378,8 +1410,10 @@ class AtndCreate(LoginRequiredMixin, CreateView):
         if self.actor.production != self.rehearsal.production:
             raise Http404
         
-        # 編集権を検査する
-        test_edit_permission(self, self.production.id)
+        # ログイン中のユーザの役者でなければ、編集権を検査する
+        actor_user = self.actor.prod_user
+        if not actor_user or actor_user.user != self.request.user:
+            test_edit_permission(self, self.production.id)
         
         return super().get(request, *args, **kwargs)
     
@@ -1410,8 +1444,10 @@ class AtndCreate(LoginRequiredMixin, CreateView):
         if self.actor.production != self.rehearsal.production:
             raise Http404
         
-        # 編集権を検査する
-        test_edit_permission(self, self.actor.production.id)
+        # ログイン中のユーザの役者でなければ、編集権を検査する
+        actor_user = self.actor.prod_user
+        if not actor_user or actor_user.user != self.request.user:
+            test_edit_permission(self, self.actor.production.id)
         
         return super().post(request, *args, **kwargs)
     
@@ -1422,6 +1458,13 @@ class AtndCreate(LoginRequiredMixin, CreateView):
         new_atnd = form.save(commit=False)
         new_atnd.actor = self.actor
         new_atnd.rehearsal = self.rehearsal
+        
+        # 変更履歴を保存
+        prod_user = accessing_prod_user(self, self.rehearsal.production.id)
+        change_log = AtndChangeLog(production=self.rehearsal.production,
+            old_value='', new_value=new_atnd,
+            changed_by=prod_user.user, changed_by_id=prod_user.id)
+        change_log.save()
         
         messages.success(self.request, str(new_atnd) + " を追加しました。")
         return super().form_valid(form)
@@ -1493,8 +1536,10 @@ class AtndUpdate(LoginRequiredMixin, UpdateView):
         if self.actor.production != self.rehearsal.production:
             raise Http404
         
-        # 編集権を検査する
-        test_edit_permission(self, self.production.id)
+        # ログイン中のユーザの役者でなければ、編集権を検査する
+        actor_user = self.actor.prod_user
+        if not actor_user or actor_user.user != self.request.user:
+            test_edit_permission(self, self.production.id)
         
         return super().get(request, *args, **kwargs)
     
@@ -1525,14 +1570,23 @@ class AtndUpdate(LoginRequiredMixin, UpdateView):
         if self.actor.production != self.rehearsal.production:
             raise Http404
         
-        # 編集権を検査する
-        test_edit_permission(self, self.actor.production.id)
+        # ログイン中のユーザの役者でなければ、編集権を検査する
+        actor_user = self.actor.prod_user
+        if not actor_user or actor_user.user != self.request.user:
+            test_edit_permission(self, self.actor.production.id)
         
         return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
         '''バリデーションを通った時
         '''
+        # 変更履歴を保存
+        prod_user = accessing_prod_user(self, self.rehearsal.production.id)
+        change_log = AtndChangeLog(production=self.rehearsal.production,
+            old_value=self.get_object(), new_value=form.instance,
+            changed_by=prod_user.user, changed_by_id=prod_user.id)
+        change_log.save()
+
         messages.success(self.request, str(form.instance) + " を更新しました。")
         return super().form_valid(form)
     
@@ -1573,9 +1627,10 @@ class AtndDelete(LoginRequiredMixin, DeleteView):
         # テンプレートでリンクの URL を決めるため
         self.page_from = self.kwargs['from']
         
-        # 編集権を検査する
-        prod_id = self.get_object().rehearsal.production.id
-        test_edit_permission(self, prod_id)
+        # ログイン中のユーザの役者でなければ、編集権を検査する
+        actor_user = self.get_object().actor.prod_user
+        if not actor_user or actor_user.user != self.request.user:
+            test_edit_permission(self, self.get_object().actor.production.id)
         
         return super().get(request, *args, **kwargs)
 
@@ -1586,9 +1641,10 @@ class AtndDelete(LoginRequiredMixin, DeleteView):
         # テンプレートでリンクの URL を決めるため
         self.page_from = self.kwargs['from']
 
-        # 編集権を検査する
-        prod_id = self.get_object().rehearsal.production.id
-        test_edit_permission(self, prod_id)
+        # ログイン中のユーザの役者でなければ、編集権を検査する
+        actor_user = self.get_object().actor.prod_user
+        if not actor_user or actor_user.user != self.request.user:
+            test_edit_permission(self, self.get_object().actor.production.id)
         
         return super().post(request, *args, **kwargs)
     
@@ -1611,6 +1667,31 @@ class AtndDelete(LoginRequiredMixin, DeleteView):
         '''削除した時のメッセージ
         '''
         result = super().delete(request, *args, **kwargs)
+
+        # 変更履歴を保存
+        prod_user = accessing_prod_user(self, self.object.rehearsal.production.id)
+        change_log = AtndChangeLog(production=self.object.rehearsal.production,
+            old_value=self.object, new_value='',
+            changed_by=prod_user.user, changed_by_id=prod_user.id)
+        change_log.save()
+
         messages.success(
             self.request, str(self.object) + " を削除しました。")
         return result
+
+
+class AtndChangeList(ProdBaseListView):
+    '''AtndChangeList のリストビュー
+
+    Template 名: atndchangelog_list (default)
+    '''
+    model = AtndChangeLog
+    
+    def get_queryset(self):
+        '''リストに表示するレコードをフィルタする
+        '''
+        prod_id=self.kwargs['prod_id']
+        logs = AtndChangeLog.objects.filter(production__pk=prod_id)\
+            .order_by('-create_dt')
+        
+        return logs

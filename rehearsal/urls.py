@@ -171,4 +171,11 @@ urlpatterns = [
     # /rhsl/atnd_table/1/ -> Attendance table for Production #1
     path('atnd_table/<int:prod_id>/', views.AtndTable.as_view(),
         name='atnd_table'),
+
+    # ----------------------------------------------------------------
+    # 出欠変更履歴
+
+    # /rhsl/atnd_change_list/1/ -> Attendance change list for Production #1
+    path('atnd_change_list/<int:prod_id>/', views.AtndChangeList.as_view(),
+        name='atnd_change_list'),
 ]

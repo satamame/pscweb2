@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Facility, Place, Rehearsal, Scene, Actor, Character,\
-    Attendance, Appearance, ScnComment
+    Attendance, Appearance, ScnComment, AtndChangeLog
 
 
 class AppearanceInline(admin.TabularInline):
@@ -54,3 +54,4 @@ admin.site.register(Character)
 admin.site.register(Attendance)
 admin.site.register(Appearance, ApperanceAdmin)
 admin.site.register(ScnComment, ScnCommentAdmin)
+admin.site.register(AtndChangeLog)

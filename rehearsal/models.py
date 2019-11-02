@@ -103,6 +103,8 @@ class Actor(models.Model):
         on_delete=models.CASCADE)
     name = models.CharField('名前', max_length=50)
     short_name = models.CharField('短縮名', max_length=5, blank=True)
+    prod_user = models.ForeignKey(ProdUser, verbose_name='アカウント',
+        on_delete=models.SET_NULL, blank=True, null=True)
     
     class Meta:
         verbose_name = verbose_name_plural = '役者'
@@ -238,3 +240,17 @@ class ScnComment(models.Model):
         # ex. 'コメント by xx at xx:xx'
         dt = timezone.localtime(self.modify_dt).strftime("%Y/%m/%d %H:%M:%S")
         return 'コメント by {} at {}'.format(self.mod_prod_user.user, dt)
+
+class AtndChangeLog(models.Model):
+    '''参加時間の変更履歴
+    '''
+    production = models.ForeignKey(Production, verbose_name='公演',
+        on_delete=models.CASCADE)
+    create_dt = models.DateTimeField('記録日時', auto_now_add=True)
+    old_value = models.CharField('変更前', max_length=50) # 理論的には最大22文字
+    new_value = models.CharField('変更後', max_length=50) # 理論的には最大22文字
+    changed_by = models.CharField('変更者', max_length=150)
+    changed_by_id = models.IntegerField('変更者ID')
+
+    class Meta:
+        verbose_name = verbose_name_plural = '出欠の変更履歴'

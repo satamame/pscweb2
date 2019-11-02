@@ -16,6 +16,7 @@
     <tr>
         <th>名前</th>
         <th>短縮名</th>
+        <th>アカウント</th>
     </tr>
     {% for item in object_list %}
     <tr>
@@ -24,6 +25,7 @@
             {{ item.name }}</a>
         </td>
         <td>{{ item.short_name }}</td>
+        <td>{{ item.prod_user.user }}</td>
     </tr>
     {% endfor %}
 </table>

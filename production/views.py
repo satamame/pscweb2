@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView
 from django.urls import reverse_lazy
@@ -27,7 +26,7 @@ class ProdCreate(LoginRequiredMixin, CreateView):
     '''Production の追加ビュー
     '''
     model = Production
-    fields = ('name', )
+    fields = ('name',)
     template_name_suffix = '_create'
     success_url = reverse_lazy('production:prod_list')
     

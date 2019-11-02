@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="margin: 0;">
+<a href="{% url 'rehearsal:rhsl_top' prod_id=prod_id %}">◀</a>
+出欠変更履歴
+</h1>
+
+<div id="logs">
+<table>
+<thead>
+    <tr>
+        <th class="sort" data-sort="create_dt">記録日時</th>
+        <th>変更前</th>
+        <th>変更後</th>
+        <th>変更者</th>
+        <th>ID</th>
+    </tr>
+</thead>
+<tbody class="list">
+    {% for item in object_list %}
+    <tr>
+        <td class="create_dt">{{ item.create_dt }}</td>
+        <td>{{ item.old_value }}</td>
+        <td>{{ item.new_value }}</td>
+        <td>{{ item.changed_by }}</td>
+        <td>{{ item.changed_by_id }}</td>
+    </tr>
+    {% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}
+
+
+{% block head %}
+<style>
+.sort {
+    color: #447e9b;
+    cursor: pointer;
+}
+.sort.desc:after {
+    content:"▼";
+}
+.sort.asc:after {
+    content:"▲";
+}
+</style>
+{% endblock %}
+
+
+{% block javascript %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+<script>
+var options = {
+  valueNames: [ 'create_dt' ]
+};
+var userList = new List('logs', options);
+
+</script>
+{% endblock %}

@@ -16,6 +16,7 @@
     <tr><th>公演</th><td>{{ object.production }}</td></tr>
     <tr><th>名前</th><td>{{ object.name }}</td></tr>
     <tr><th>短縮名</th><td>{{ object.short_name }}</td></tr>
+    <tr><th>アカウント</th><td>{{ object.prod_user.user }}</td></tr>
 </table>
 
 <div class="sectionheader headline">参加時間</div>
@@ -24,7 +25,7 @@
 {% for atnd in atnds %}
 <tr style="background-color:#fdfbf8;">
 <td>{{ atnd.rhsl }}</td><td>{{ atnd.rhsl.start_time}}-{{ atnd.rhsl.end_time}}</td>
-{% if view.prod_user.is_owner or view.prod_user.is_editor %}
+{% if view.prod_user.is_owner or view.prod_user.is_editor or view.prod_user == object.prod_user %}
 <td>
 <a href="{% url 'rehearsal:atnd_create' actr_id=object.id rhsl_id=atnd.rhsl.id from='actr' %}"
     class="addlink">追加</a>
@@ -42,7 +43,7 @@
         <td align="right">参加</td><td>{{ slot.from_time }}-{{ slot.to_time }}</td>
         {% endif %}
     {% endif %}
-    {% if view.prod_user.is_owner or view.prod_user.is_editor %}
+    {% if view.prod_user.is_owner or view.prod_user.is_editor or view.prod_user == object.prod_user %}
         <td>
         <a href="{% url 'rehearsal:atnd_update' pk=slot.id from='actr' %}"
             class="changelink">編集</a>
