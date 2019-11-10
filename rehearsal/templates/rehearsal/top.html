@@ -3,22 +3,32 @@
 {% block content %}
 <h1>{{ view.production }}</h1>
 
+<hr>
 <ul>
 <li><a href="{% url 'rehearsal:rhsl_list' prod_id=view.production.id %}">
     稽古一覧</a></li>
+<li><a href="{% url 'rehearsal:actr_list' prod_id=view.production.id %}">
+    役者一覧</a></li>
+<li><a href="{% url 'rehearsal:atnd_table' prod_id=view.production.id %}">
+    出欠表</a></li>
+</ul>
+
+<hr>
+<ul>
 <li><a href="{% url 'rehearsal:plc_list' prod_id=view.production.id %}">
     稽古場一覧</a></li>
+<li><a href="{% url 'rehearsal:atnd_change_list' prod_id=view.production.id %}">
+    出欠変更履歴</a></li>
+</ul>
+
+<hr>
+<ul>
 <li><a href="{% url 'rehearsal:scn_list' prod_id=view.production.id %}">
     シーン一覧</a></li>
 <li><a href="{% url 'rehearsal:chr_list' prod_id=view.production.id %}">
     登場人物一覧</a></li>
-<li><a href="{% url 'rehearsal:actr_list' prod_id=view.production.id %}">
-    役者一覧</a></li>
 <li><a href="{% url 'rehearsal:appr_table' prod_id=view.production.id %}">
     香盤表</a></li>
-<li><a href="{% url 'rehearsal:atnd_table' prod_id=view.production.id %}">
-    出欠表</a></li>
-<li><a href="{% url 'rehearsal:atnd_change_list' prod_id=view.production.id %}">
-    出欠変更履歴</a></li>
 </ul>
+
 {% endblock %}

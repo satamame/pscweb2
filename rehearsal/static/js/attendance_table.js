@@ -108,8 +108,10 @@ function draw(){
             ${dowChars.charAt(d.getDay())})
         `.replace(/[\n\r]+\s*/g, '');
         
-        thead += "<th class=\"header_cell\">" + dateStr + "<br>" + rhsl['place']
-        + "<br>" + rhsl['start_time'] + "-" + rhsl['end_time'] + "</th>";
+        // ヘッダを出欠グラフへのリンクにする
+        link = `<a href=\"/rhsl/atnd_graph/${rhsl['id']}/\">` + dateStr + "<br>"
+            + rhsl['place'] + "<br>" + rhsl['start_time'] + "-" + rhsl['end_time'];
+        thead += `<th class=\"header_cell\">${link}</th>`;
     });
     
     thead += "</tr>";
@@ -123,7 +125,7 @@ function draw(){
         
         // 役者名のセル
         tbody += "<tr><td class=\"name_cell\" style=\"background-color:"
-            + name_cell_color + ";\">" + actr['short_name'] + "</td>";
+            + name_cell_color + ";\">" + actr['name'] + "</td>";
         
         // 出欠データ
         actr_atnds[actr_idx].forEach((rhsl_atnds) => {

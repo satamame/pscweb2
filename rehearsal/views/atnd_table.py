@@ -34,6 +34,7 @@ class AtndTable(LoginRequiredMixin, TemplateView):
         # 稽古リスト
         rehearsals = Rehearsal.objects.filter(production__pk=prod_id)
         rhsl_list = [{
+            'id': rhsl.id,
             'place': str(rhsl.place),
             'date': rhsl.date.strftime('%Y-%m-%d'),
             'start_time': rhsl.start_time.strftime('%H:%M'),
@@ -42,19 +43,20 @@ class AtndTable(LoginRequiredMixin, TemplateView):
         context['rhsls'] = json.dumps(rhsl_list)
         
         # 役者リスト
-        actors = Actor.objects.filter(production__pk=prod_id)\
-            .order_by('name')
-        actr_list = [{
+        actr_list = list(
+            Actor.objects.filter(production__pk=prod_id).order_by('name'))
+
+        actrs = [{
             'name': actr.name,
             'short_name': actr.get_short_name()
-        } for actr in actors]
+        } for actr in actr_list]
         
-        context['actrs'] = json.dumps(actr_list)
+        context['actrs'] = json.dumps(actrs)
         
         # 役者ごとの出欠の、稽古リストに対応するリスト (3次元配列)
         attendances = Attendance.objects.filter(actor__production__pk=prod_id)
         actrs_rhsl_atnds = []
-        for actor in actors:
+        for actor in actr_list:
             # その役者の出欠
             actor_atnds = [atnd for atnd in attendances if atnd.actor == actor]
             rhsl_attnds = []
@@ -84,9 +86,9 @@ class AtndTable(LoginRequiredMixin, TemplateView):
         characters = Character.objects.filter(production__pk=prod_id)
         chrs = []
         for character in characters:
-            # 配役が actors の何番目かを取得
-            if character.cast in actors:
-                actr_idx = list(actors).index(character.cast)
+            # 配役が actr_list の何番目かを取得
+            if character.cast in actr_list:
+                actr_idx = actr_list.index(character.cast)
             else:
                 # 配役がなければ -1
                 actr_idx = -1

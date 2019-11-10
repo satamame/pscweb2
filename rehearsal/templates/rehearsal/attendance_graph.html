@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 style="margin: 0;">
+<a href="{% url 'rehearsal:rhsl_top' prod_id=prod_id %}">◀</a>
+出欠グラフ
+</h1>
+
+<p>
+シーン <select id="scene_menu"></select>
+<input type="button" value="適用" onClick="draw();">
+<input type="button" value="リセット" onClick="init(); draw();">
+</p>
+
+<div class="table-scroll-host" style="outline:1px solid #eee; max-width:100%; max-height:600px;">
+<table style="border:0;">
+<thead id="t_header" style="border:0;"></thead>
+<tbody id="t_data" style="border:0;"></tbody>
+</table>
+</div>
+{% endblock %}
+
+{% block head%}
+<style>
+
+</style>
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript" src="{% static 'js/attendance_graph.js' %}"></script >
+
+<script>
+// View からもらうデータ
+// シーンのリスト
+scenes = JSON.parse('{{ scenes|safe }}');
+// シーンごとの時間スロット
+scns_time_slots = JSON.parse('{{ scns_time_slots|safe }}');
+// 役者のリスト
+actors = JSON.parse('{{ actors|safe }}');
+// 登場人物のリスト
+characters = JSON.parse('{{ characters|safe }}');
+
+</script>
+{% endblock %}
