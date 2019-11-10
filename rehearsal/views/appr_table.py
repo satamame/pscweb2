@@ -49,7 +49,7 @@ class ApprTable(LoginRequiredMixin, TemplateView):
             # シーン単品での出番のリスト
             scene_apprs = [appr for appr in appearances if appr.scene == scene]
             # 有効なセリフ数の平均値
-            avrg_lines_mun = Appearance.average_lines_num(scene_apprs)
+            avrg_lines_num = Appearance.average_lines_num(scene_apprs)
             # そのシーンの、登場人物全員分のセリフ数のリスト
             chr_apprs = []
             for character in characters:
@@ -57,7 +57,7 @@ class ApprTable(LoginRequiredMixin, TemplateView):
                 if len(apprs) > 0:
                     # セリフ数 (自動なら平均値)
                     chr_apprs.append(
-                        avrg_lines_mun if apprs[0].lines_auto else apprs[0].lines_num)
+                        avrg_lines_num if apprs[0].lines_auto else apprs[0].lines_num)
                 else:
                     # 出番がないなら -1 を入れる
                     chr_apprs.append(-1)

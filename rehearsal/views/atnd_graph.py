@@ -98,30 +98,36 @@ class AtndGraph(LoginRequiredMixin, TemplateView):
         # シーンごとの時間スロット
         scns_time_slots = []
         for scene in scenes:
-            # このシーンの登場人物のリスト
-            scn_chrs = [appr.character for appr in scene.appearance_set.all()]
-            # 元の chr_list から id だけ取ったもの
+            # このシーンの出番のリスト
+            scn_apprs = [appr for appr in scene.appearance_set.all()]
+            # 元の chr_list から id だけ取り出したもの
             chr_ids = [chr.id for chr in chr_list]
             
             # scn_chrs に対応する chr_list のインデックスリストを作る
             chr_idxs = []
-            for scn_chr in scn_chrs:
+            for scn_appr in scn_apprs:
                 # chr_list の何番目かを取得
-                if scn_chr.id in chr_ids:
-                    chr_idxs.append(chr_ids.index(scn_chr.id))
+                if scn_appr.character.id in chr_ids:
+                    chr_idxs.append(chr_ids.index(scn_appr.character.id))
                 else:
                     # 配役がなければ -1
                     chr_idxs.append(-1)
             
-            # scene に情報として登場人物のインデックスリストを追加
+            # scene に情報として登場人物のインデックスのリストを追加
             scene.chr_idxs = chr_idxs
-
-            # scn_chrs に対応する役者のインデックスリスト
+            # scene に情報として chr_idxs に対応するセリフ数のリストを追加
+            scene.lines_nums = [
+                Appearance.average_lines_num(scn_apprs)
+                    if appr.lines_auto else appr.lines_num
+                for appr in scn_apprs
+            ]
+            
+            # scn_chrs に対応する役者のインデックスリストを作る
             actr_idxs = []
-            for scn_chr in scn_chrs:
+            for scn_appr in scn_apprs:
                 # 配役が actr_list の何番目かを取得
-                if scn_chr.cast in actr_list:
-                    actr_idx = actr_list.index(scn_chr.cast)
+                if scn_appr.character.cast in actr_list:
+                    actr_idx = actr_list.index(scn_appr.character.cast)
                 else:
                     # 配役がなければ -1
                     actr_idx = -1
@@ -166,7 +172,8 @@ class AtndGraph(LoginRequiredMixin, TemplateView):
             scns_time_slots.append(slots)
         
         context['scns'] = json.dumps([
-            {'id': scn.id, 'name': scn.name, 'chr_idxs':scn.chr_idxs}
+            {'id': scn.id, 'name': scn.name, 'chr_idxs':scn.chr_idxs,
+                'lines_nums': scn.lines_nums}
             for scn in scenes
         ])
         context['scns_time_slots'] = json.dumps(scns_time_slots)

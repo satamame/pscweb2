@@ -53,7 +53,7 @@ function draw(){
             var height = height_for_time(slot['from_time'], slot['to_time']);
             // スロットの色
             var atnd_rate = atnd_chrs.length / scn['chr_idxs'].length;
-            var r = 240 - atnd_rate * 128;
+            var r = 240 - (atnd_rate * 8) ** 2 - atnd_rate * 64;
             var g = 240;
             var b = r;
             var color = `rgb(${r}, ${g}, ${b})`;
