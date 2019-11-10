@@ -3,14 +3,30 @@
 
 {% block content %}
 <h1 style="margin: 0;">
-<a href="{% url 'rehearsal:rhsl_top' prod_id=prod_id %}">◀</a>
+<a href="{% url 'rehearsal:atnd_table' prod_id=prod_id %}">◀</a>
 出欠グラフ
 </h1>
+<p style="font-weight:bold;">
+{{ view.rehearsal.date|date:"m/d(D)" }}
+{{ view.rehearsal.start_time }}-{{ view.rehearsal.end_time }}
+{% if view.rehearsal.place %}
+    {% if view.rehearsal.place.facility.url %}
+        <a href="{{view.rehearsal.place.facility.url}}" target="_blank">{{ view.rehearsal.place }}</a>
+    {% else %}
+        {{ view.rehearsal.place }}
+    {% endif %}
+{% else %}
+    場所未定
+{% endif %}
+</p>
 
 <p>
-シーン <select id="scene_menu"></select>
+出席率の基準 <select id="mode_menu">
+    <option value="by_chrs">登場人物の数</option>
+    <option value="by_actrs">役者の数</option>
+    <option value="by_lines">セリフ数</option>
+</select>
 <input type="button" value="適用" onClick="draw();">
-<input type="button" value="リセット" onClick="init(); draw();">
 </p>
 
 <div class="table-scroll-host" style="outline:1px solid #eee; max-width:100%; max-height:600px;">
@@ -23,7 +39,20 @@
 
 {% block head%}
 <style>
+/* Table Scroll */
+.table-scroll-host { overflow:scroll; }
+table th { position:sticky; top:0; z-index:1; }
+table th:nth-child(1) { position:sticky; left:0; }
+table td:nth-child(1) { position:sticky; left:0; }
 
+/* Cells */
+.top_left_cell{ min-width:50px; max-width:70px; padding:2px 3px;
+    border:0; outline:1px solid #eee; }
+.header_cell{ line-height: 1.1; min-width:90px; max-width:90px; padding:2px 3px;
+    border:0; outline:1px solid #eee; }
+.name_cell{ padding:2px 3px; vertical-align:middle; border:0; outline:1px solid #eee; }
+.data_cell{ text-align:left; vertical-align:middle; line-height:1.1; word-break:break-all;
+    padding:2px 3px; border:1px solid #eee; }
 </style>
 {% endblock %}
 
@@ -33,13 +62,14 @@
 <script>
 // View からもらうデータ
 // シーンのリスト
-scenes = JSON.parse('{{ scenes|safe }}');
+scns = JSON.parse('{{ scns|safe }}');
 // シーンごとの時間スロット
 scns_time_slots = JSON.parse('{{ scns_time_slots|safe }}');
 // 役者のリスト
-actors = JSON.parse('{{ actors|safe }}');
+actrs = JSON.parse('{{ actrs|safe }}');
 // 登場人物のリスト
-characters = JSON.parse('{{ characters|safe }}');
+chrs = JSON.parse('{{ chrs|safe }}');
 
+draw();
 </script>
 {% endblock %}

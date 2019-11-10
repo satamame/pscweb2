@@ -5,9 +5,9 @@
 // .data_cell
 
 // 以下のデータを View から受け取ること
-var rhsls;              // 稽古のコマのデータの配列
-var actrs;              // 役者の配列
-var actr_atnds;         // 役者ごとの出欠の、稽古の配列に対応する配列
+var rhsls;              // 稽古のコマのデータのリスト
+var actrs;              // 役者のリスト
+var actr_atnds;         // 役者ごとの出欠の、稽古の配列に対応するリスト
 var chrs;               // 登場人物のリスト
 var scenes;             // シーン名のリスト
 var scenes_chr_apprs    // シーンごとの登場人物とセリフ数のリスト

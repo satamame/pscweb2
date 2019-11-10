@@ -42,16 +42,16 @@ class AtndGraph(LoginRequiredMixin, TemplateView):
         # 役者リスト
         actr_list = list(
             Actor.objects.filter(production__pk=prod_id).order_by('name'))
-        context['actors'] = json.dumps([
+        context['actrs'] = json.dumps([
             {'id': actr.id, 'name': actr.name, 'short_name': actr.short_name}
             for actr in actr_list
         ])
         
         # 登場人物リスト
-        characters = list(
+        chr_list = list(
             Character.objects.filter(production__pk=prod_id))
-        # characters の各要素に、対応する役者のインデックスを持つ
-        for chr in characters:
+        # chr_list の各要素に、対応する役者のインデックスを持つ
+        for chr in chr_list:
             # 配役が actr_list の何番目かを取得
             if chr.cast in actr_list:
                 chr.actr_idx = actr_list.index(chr.cast)
@@ -59,10 +59,10 @@ class AtndGraph(LoginRequiredMixin, TemplateView):
                 # 配役がなければ -1
                 chr.actr_idx = -1
         
-        context['characters'] = json.dumps([
+        context['chrs'] = json.dumps([
             {'id': chr.id, 'name': chr.name, 'short_name': chr.short_name,
                 'actr_idx': chr.actr_idx}
-            for chr in characters
+            for chr in chr_list
         ])
         
         # この稽古の、全役者の in/out 時刻のリスト
@@ -94,27 +94,27 @@ class AtndGraph(LoginRequiredMixin, TemplateView):
         
         # シーンのリスト
         scenes = Scene.objects.filter(production__pk=prod_id)
-        context['scenes'] = json.dumps([
-            {'id': scn.id, 'name': scn.name} for scn in scenes
-        ])
         
         # シーンごとの時間スロット
         scns_time_slots = []
         for scene in scenes:
             # このシーンの登場人物のリスト
             scn_chrs = [appr.character for appr in scene.appearance_set.all()]
-            # 元の characters から id だけ取ったもの
-            chr_ids = [chr.id for chr in characters]
+            # 元の chr_list から id だけ取ったもの
+            chr_ids = [chr.id for chr in chr_list]
             
-            # scn_chrs に対応する characters のインデックスリストを作る
+            # scn_chrs に対応する chr_list のインデックスリストを作る
             chr_idxs = []
             for scn_chr in scn_chrs:
-                # characters の何番目かを取得
+                # chr_list の何番目かを取得
                 if scn_chr.id in chr_ids:
                     chr_idxs.append(chr_ids.index(scn_chr.id))
                 else:
                     # 配役がなければ -1
                     chr_idxs.append(-1)
+            
+            # scene に情報として登場人物のインデックスリストを追加
+            scene.chr_idxs = chr_idxs
 
             # scn_chrs に対応する役者のインデックスリスト
             actr_idxs = []
@@ -165,6 +165,10 @@ class AtndGraph(LoginRequiredMixin, TemplateView):
             
             scns_time_slots.append(slots)
         
+        context['scns'] = json.dumps([
+            {'id': scn.id, 'name': scn.name, 'chr_idxs':scn.chr_idxs}
+            for scn in scenes
+        ])
         context['scns_time_slots'] = json.dumps(scns_time_slots)
         
         return context
