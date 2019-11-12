@@ -173,7 +173,7 @@ urlpatterns = [
         name='atnd_table'),
 
     # ----------------------------------------------------------------
-    # 出欠グラフ (稽古ごとの出欠表)
+    # 出席率グラフ (稽古ごとの出席率)
 
     # /rhsl/atnd_graph/1/ -> Attendance graph for Rehearsal #1
     path('atnd_graph/<int:rhsl_id>/', views.AtndGraph.as_view(),
