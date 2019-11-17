@@ -178,7 +178,4 @@ class AtndGraph(LoginRequiredMixin, TemplateView):
         ])
         context['scns_time_slots'] = json.dumps(scns_time_slots)
         
-        print(context['scns'])
-        print(context['scns_time_slots'])
-        
         return context

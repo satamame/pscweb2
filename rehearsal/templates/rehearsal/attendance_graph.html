@@ -35,6 +35,17 @@
 <tbody id="t_data" style="border:0;"></tbody>
 </table>
 </div>
+
+<!-- 時間スロットをクリックした時に表示するパネル -->
+<div id="slot_info_panel" class="modal">
+<div id="slot_info_content" class="modal-content">
+slot_info
+
+<input type="button" onclick="copy_close_modal();" value="コピーして閉じる">
+<input type="button" onclick="close_modal();" value="閉じる">
+
+</div>
+</div>
 {% endblock %}
 
 {% block head%}
@@ -53,6 +64,28 @@ table td:nth-child(1) { position:sticky; left:0; }
 .name_cell{ padding:2px 3px; vertical-align:middle; border:0; outline:1px solid #eee; }
 .data_cell{ text-align:left; vertical-align:middle; line-height:1.1; word-break:break-all;
     padding:2px 3px; border:1px solid #eee; }
+
+/* Modal Panel */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 0 16px;
+    border: 1px solid #888;
+    width: 300px; /* Could be more or less, depending on screen size */
+}
+
 </style>
 {% endblock %}
 
@@ -69,7 +102,18 @@ scns_time_slots = JSON.parse('{{ scns_time_slots|safe }}');
 actrs = JSON.parse('{{ actrs|safe }}');
 // 登場人物のリスト
 chrs = JSON.parse('{{ chrs|safe }}');
+// 日付 (スロット情報表示用)
+date = '{{ view.rehearsal.date|date:"m/d(D)" }}';
 
 draw();
+
+// パネルの外側をクリックしたらパネルを閉じる
+window.onclick = function(event) {
+    var slot_info_panel = document.getElementById("slot_info_panel");
+    if (event.target == slot_info_panel) {
+        slot_info_panel.style.display = "none";
+    }
+}
+
 </script>
 {% endblock %}

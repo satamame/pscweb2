@@ -7,6 +7,7 @@ var scns;               // シーンのリスト
 var scns_time_slots;    // シーンごとの時間スロット
 var actrs;              // 役者のリスト
 var chrs;               // 登場人物のリスト
+var date;               // 日付 (スロット情報表示用)
 
 // 定数 (寸法)
 var px_per_hour = 60;
@@ -72,7 +73,7 @@ function draw(){
         
         var time_slots = "";
         var offset = 0;
-        scns_time_slots[scn_idx].forEach((slot) => {
+        scns_time_slots[scn_idx].forEach((slot, slot_idx) => {
             // 出席者が演じるキャラのリストと合計セリフ数
             var atnd_chrs = [];
             var atnd_lines_num = 0;
@@ -113,11 +114,14 @@ function draw(){
             // スロットの色
             var color = color_for_rate(atnd_rate);
             
+            // 内容
             time_slots += `<div style=\"position:absolute; top:${offset}px; left:0; width:100%; height:${height}px; `
                 + `background-color:${color}; border:solid 1px #eee;\">`;
             time_slots += slot['from_time'] + "-" + slot['to_time'] + "<br>";
             time_slots += atnd_num + "/" + total_num;
+            time_slots += ` <a href=\"javascript:void(0)\" onclick=\"show_info(${scn_idx}, ${slot_idx})\">&#x1F6C8;</a>`;
             time_slots += "</div>\n";
+            
             offset += height;
         });
         
@@ -126,4 +130,60 @@ function draw(){
     });
     tbody += "</tr>";
     document.getElementById("t_data").innerHTML = tbody;
+}
+
+// 時間スロットの情報を表示
+function show_info(scn_idx, slot_idx){
+    // 表示するシーンと時間スロット
+    var scn = scns[scn_idx];
+    var slot = scns_time_slots[scn_idx][slot_idx];
+    
+    // 日付と時間帯とシーン名
+    var content = `<h2>${date} ${slot['from_time']}-${slot['to_time']}<br>${scn['name']}</h2>\n`;
+    
+    // いる役者といない役者のリストを作る
+    var attendee = [];
+    var absentee = [];
+    scn_actr_idxs(scn_idx).forEach((actr_idx) => {
+        // リストの要素1を役者名にする
+        var actr = [actrs[actr_idx]['name']];
+        // リストの要素2を登場人物名とセリフ数のリストにする
+        var chrs_info = [];
+        scn['chr_idxs'].forEach((chr_idx, chr_idx_idx) => {
+            if (chrs[chr_idx]['actr_idx'] == actr_idx){
+                chrs_info.push(chrs[chr_idx]['name'] + ` (${scn['lines_nums'][chr_idx_idx]})`);
+            }
+        });
+        actr.push(chrs_info);
+        
+        if (slot['attendee'].indexOf(actr_idx) >= 0)
+            attendee.push(actr);
+        else
+            absentee.push(actr);
+    });
+    
+    // いる役者
+    content += "<h3>いる役者</h3>\n<table>\n";
+    attendee.forEach((actr) => {
+        var left_cell = actr[0];
+        actr[1].forEach((chrs_info) => {
+            content += `<tr><td>${left_cell}</td><td>${chrs_info}</td></tr>\n`;
+            left_cell = "";
+        });
+    });
+    content += "</table>\n"
+
+    // いない役者
+    content += "<h3>いない役者</h3>\n<table>\n";
+    absentee.forEach((actr) => {
+        var left_cell = actr[0];
+        actr[1].forEach((chrs_info) => {
+            content += `<tr><td>${left_cell}</td><td>${chrs_info}</td></tr>\n`;
+            left_cell = "";
+        });
+    });
+    content += "</table>\n"
+    
+    document.getElementById("slot_info_content").innerHTML = content;
+    document.getElementById("slot_info_panel").style.display = "block";
 }
