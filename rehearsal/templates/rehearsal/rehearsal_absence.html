@@ -62,10 +62,8 @@ function copy_close(){
         // 自分を閉じる
         window.close();
     }
-
     // コピーイベントが発生したときに、クリップボードに書き込むようにしておく
     document.addEventListener("copy" , listener);
-
     // コピーイベントを起こす
     document.execCommand("copy");
 }

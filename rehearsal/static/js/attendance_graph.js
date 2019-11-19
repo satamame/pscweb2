@@ -118,8 +118,8 @@ function draw(){
             time_slots += `<div style=\"position:absolute; top:${offset}px; left:0; width:100%; height:${height}px; `
                 + `background-color:${color}; border:solid 1px #eee;\">`;
             time_slots += slot['from_time'] + "-" + slot['to_time'] + "<br>";
-            time_slots += atnd_num + "/" + total_num;
-            time_slots += ` <a href=\"javascript:void(0)\" onclick=\"show_info(${scn_idx}, ${slot_idx})\">&#x1F6C8;</a>`;
+            time_slots += `<a href=\"javascript:void(0)\" onclick=\"show_info(${scn_idx}, ${slot_idx})\">`;
+            time_slots += `${atnd_num}/${total_num}</a>`;
             time_slots += "</div>\n";
             
             offset += height;
@@ -139,7 +139,12 @@ function show_info(scn_idx, slot_idx){
     var slot = scns_time_slots[scn_idx][slot_idx];
     
     // 日付と時間帯とシーン名
-    var content = `<h2>${date} ${slot['from_time']}-${slot['to_time']}<br>${scn['name']}</h2>\n`;
+    var content = "<h2 id=\"dt_scn\" style=\"float:left;\">";
+    content += `${date} ${slot['from_time']}-${slot['to_time']}<br>${scn['name']}</h2>\n`;
+    
+    // 閉じるボタン
+    content += "<div style=\"text-align:right; padding:16px 0 0\"><a href=\"javascript:void(0)\" ";
+    content += "onclick=\"hide_info();\">✕</a></div>\n"
     
     // いる役者といない役者のリストを作る
     var attendee = [];
@@ -163,7 +168,7 @@ function show_info(scn_idx, slot_idx){
     });
     
     // いる役者
-    content += "<h3>いる役者</h3>\n<table>\n";
+    content += "<h3 style=\"clear:left;\">いる役者</h3>\n<table>\n";
     attendee.forEach((actr) => {
         var left_cell = actr[0];
         actr[1].forEach((chrs_info) => {
@@ -184,6 +189,32 @@ function show_info(scn_idx, slot_idx){
     });
     content += "</table>\n"
     
+    content += "<input type=\"button\" onclick=\"copy_dt_scn();\" ";
+    content += "style=\"margin:16px\" value=\"日時とシーン名をコピー\">";
+    
     document.getElementById("slot_info_content").innerHTML = content;
     document.getElementById("slot_info_panel").style.display = "block";
+}
+
+function hide_info(){
+    console.log("hide_info called.");
+    var slot_info_panel = document.getElementById("slot_info_panel");
+    slot_info_panel.style.display = "none";
+}
+
+function copy_dt_scn(){
+    // パネルの h2 に表示している日時とシーン名を取得
+    var str = document.getElementById("dt_scn").innerHTML.replace("<br>", "\n");
+    
+    var listener = function(e){
+        e.clipboardData.setData("text/plain" , str);    
+        // 本来のイベントをキャンセル
+        e.preventDefault();
+        // リスナーを削除
+        document.removeEventListener("copy", listener);
+    }
+    // コピーイベントが発生したときに、クリップボードに書き込むようにしておく
+    document.addEventListener("copy" , listener);
+    // コピーイベントを起こす
+    document.execCommand("copy");
 }
