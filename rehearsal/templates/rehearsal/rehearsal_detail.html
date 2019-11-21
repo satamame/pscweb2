@@ -20,8 +20,10 @@
     <tr><th>メモ</th><td>{{ object.note | urlize | linebreaksbr }}</td></tr>
 </table>
 
-<input type="button" style="margin-top: 20px;" onclick="show_absence();"
-    value="欠席・未定の人を見る">
+<div style="margin-top: 20px;">
+<input type="button" onclick="show_absence();" value="欠席・未定の人を見る">
+<a href="{% url 'rehearsal:atnd_graph' rhsl_id=object.id %}" style="margin-left:16px;">▶出席率グラフ</a>
+</div>
 {% endblock %}
 
 {% block javascript %}

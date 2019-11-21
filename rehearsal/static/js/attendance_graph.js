@@ -168,7 +168,7 @@ function show_info(scn_idx, slot_idx){
     });
     
     // いる役者
-    content += "<h3 style=\"clear:left;\">いる役者</h3>\n<table>\n";
+    content += "<h3 style=\"clear:left;\">いる役者</h3>\n<table style=\"margin:0 0 0 10px;\">\n";
     attendee.forEach((actr) => {
         var left_cell = actr[0];
         actr[1].forEach((chrs_info) => {
@@ -179,7 +179,7 @@ function show_info(scn_idx, slot_idx){
     content += "</table>\n"
 
     // いない役者
-    content += "<h3>いない役者</h3>\n<table>\n";
+    content += "<h3>いない役者</h3>\n<table style=\"margin:0 0 0 10px;\">\n";
     absentee.forEach((actr) => {
         var left_cell = actr[0];
         actr[1].forEach((chrs_info) => {
@@ -189,17 +189,13 @@ function show_info(scn_idx, slot_idx){
     });
     content += "</table>\n"
     
-    content += "<input type=\"button\" onclick=\"copy_dt_scn();\" ";
-    content += "style=\"margin:16px\" value=\"日時とシーン名をコピー\">";
-    
     document.getElementById("slot_info_content").innerHTML = content;
-    document.getElementById("slot_info_panel").style.display = "block";
+    document.getElementById("slot_info_screen").style.display = "block";
 }
 
 function hide_info(){
-    console.log("hide_info called.");
-    var slot_info_panel = document.getElementById("slot_info_panel");
-    slot_info_panel.style.display = "none";
+    var slot_info_screen = document.getElementById("slot_info_screen");
+    slot_info_screen.style.display = "none";
 }
 
 function copy_dt_scn(){

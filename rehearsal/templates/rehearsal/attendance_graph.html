@@ -6,7 +6,7 @@
 <a href="{% url 'rehearsal:atnd_table' prod_id=prod_id %}">◀</a>
 出席率グラフ
 </h1>
-<p style="font-weight:bold;">
+<p><span style="font-weight:bold;">
 {{ view.rehearsal.date|date:"m/d(D)" }}
 {{ view.rehearsal.start_time }}-{{ view.rehearsal.end_time }}
 {% if view.rehearsal.place %}
@@ -18,6 +18,8 @@
 {% else %}
     場所未定
 {% endif %}
+</span>
+&nbsp;<a href="{% url 'rehearsal:rhsl_detail' pk=view.rehearsal.id %}">[詳細]</a>
 </p>
 
 <p>
@@ -37,8 +39,12 @@
 </div>
 
 <!-- 時間スロットをクリックした時に表示するパネル -->
-<div id="slot_info_panel" class="modal">
+<div id="slot_info_screen" class="modal-screen">
+<div id="slot_info_panel" class="modal-panel">
 <div id="slot_info_content" class="modal-content">
+</div>
+<input type="button" onclick="copy_dt_scn();" style="margin:16px;" value="日時とシーン名をコピー">
+<a href="{% url 'rehearsal:rhsl_detail' pk=view.rehearsal.id %}">▶稽古の詳細</a>
 </div>
 </div>
 {% endblock %}
@@ -61,7 +67,7 @@ table td:nth-child(1) { position:sticky; left:0; }
     padding:2px 3px; border:1px solid #eee; }
 
 /* Modal Panel */
-.modal {
+.modal-screen {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
     z-index: 1; /* Sit on top */
@@ -73,7 +79,7 @@ table td:nth-child(1) { position:sticky; left:0; }
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
 }
-.modal-content {
+.modal-panel {
     background-color: #fefefe;
     margin: 100px auto; /* 100px from the top and centered */
     padding: 0 16px;
@@ -104,9 +110,9 @@ draw();
 
 // パネルの外側をクリックしたらパネルを閉じる
 window.onclick = function(event) {
-    var slot_info_panel = document.getElementById("slot_info_panel");
-    if (event.target == slot_info_panel) {
-        slot_info_panel.style.display = "none";
+    var slot_info_screen = document.getElementById("slot_info_screen");
+    if (event.target == slot_info_screen) {
+        slot_info_screen.style.display = "none";
     }
 }
 
