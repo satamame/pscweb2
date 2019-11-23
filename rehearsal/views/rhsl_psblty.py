@@ -82,7 +82,7 @@ class RhslPossibility(LoginRequiredMixin, TemplateView):
                 
                 # シーンの登場人物数
                 chrs_num = Appearance.objects.filter(scene=slots['scene']).count()
-
+                
                 psblty = 0
                 # スロットごとの (時間 * 出席者 / 出演者) を加算していく
                 for slot in slots['time_slots']:
@@ -106,5 +106,42 @@ class RhslPossibility(LoginRequiredMixin, TemplateView):
                 scn_psblty.append(psblty)
             psblty_in_chrs.append(scn_psblty)
         context['psblty_in_chrs'] = json.dumps(psblty_in_chrs)
+        
+        # 役者ベースの稽古可能性データ
+        psblty_in_actrs = []
+        # 稽古ごと
+        for rhsl_slots in rhsls_scns_slots:
+            rhsl = rhsl_slots['rehearsal']
+            
+            scn_psblty = []
+            # シーンごと
+            for slots in rhsl_slots['scns_slots']:
+                
+                # シーンの役者数
+                scn_apprs = Appearance.objects.filter(scene=slots['scene'])
+                scn_actrs = [appr.character.cast for appr in scn_apprs]
+                actrs_num = len(list(set(scn_actrs)))
+                
+                print('scn_actrs')
+                print(scn_actrs, actrs_num)
+                
+                psblty = 0
+                # スロットごとの (時間 * 出席者 / 出演者) を加算していく
+                for slot in slots['time_slots']:
+                    # 時間
+                    from_time = slot['from_time'].hour * 60 + slot['from_time'].minute
+                    to_time = slot['to_time'].hour * 60 + slot['to_time'].minute
+                    slot_time = to_time - from_time
+                    
+                    # 時間 * 出席する役者の役の数 / 登場人物数
+                    psblty += slot_time * len(slot['attendee']) / actrs_num
+                    
+                    print('possibility: {} x {} / {} = {}'.format(
+                        slot_time, len(slot['attendee']), actrs_num,
+                        slot_time * len(slot['attendee']) / actrs_num))
+                
+                scn_psblty.append(psblty)
+            psblty_in_actrs.append(scn_psblty)
+        context['psblty_in_actrs'] = json.dumps(psblty_in_actrs)
         
         return context

@@ -60,6 +60,9 @@ function draw(){
         case "by_chrs":
             psblty = psblty_in_chrs;
             break;
+        case "by_actrs":
+            psblty = psblty_in_actrs;
+            break;
         default:
             psblty = psblty_in_chrs;
             break;
