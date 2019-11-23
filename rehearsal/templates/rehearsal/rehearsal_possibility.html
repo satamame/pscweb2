@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 style="margin: 0;">
+<a href="{% url 'rehearsal:rhsl_top' prod_id=prod_id %}">◀</a>
+稽古の可能性
+</h1>
+
+<p>
+出席率の基準 <select id="mode_menu">
+    <option value="by_chrs">登場人物の数</option>
+    <option value="by_actrs">役者の数</option>
+    <option value="by_lines">セリフ数</option>
+</select>
+<input type="button" value="適用" onClick="draw();">
+</p>
+
+<div class="table-scroll-host" style="outline:1px solid #eee; max-width:100%; max-height:600px;">
+    <table style="border:0;">
+    <thead id="t_header" style="border:0;"></thead>
+    <tbody id="t_data" style="border:0;"></tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block head%}
+<style>
+/* Table Scroll */
+.table-scroll-host { overflow:scroll; }
+table th { position:sticky; top:0; }
+table th:nth-child(1) { position:sticky; left:0; z-index:2; }
+table td:nth-child(1) { position:sticky; left:0; z-index:1; }
+
+/* Cells */
+.top_left_cell{ min-width:50px; max-width:70px; padding:2px 3px;
+    border:0; outline:1px solid #eee; }
+.header_cell{ line-height: 1.1; min-width:90px; max-width:90px; padding:2px 3px;
+    border:0; outline:1px solid #eee; }
+.name_cell{ padding:2px 3px; vertical-align:middle; border:0; outline:1px solid #eee; }
+.data_cell{ text-align:center; vertical-align:middle; line-height:1.1; word-break:break-all;
+    padding:2px 3px; border:1px solid #eee; }
+</style>
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript" src="{% static 'js/rehearsal_possibility.js' %}"></script >
+
+<script>
+var dowChars = '日月火水木金土';
+
+// View からもらうデータ
+// 稽古のリスト
+rhsls = JSON.parse('{{ rhsls|safe }}');
+// シーンのリスト
+
+// 登場人物ベースのデータ
+
+// 役者ベースのデータ
+
+// セリフ数ベースのデータ
+
+
+// init_scene_menu();
+// init();
+// draw();
+</script>
+{% endblock %}

@@ -172,12 +172,17 @@ urlpatterns = [
     path('atnd_table/<int:prod_id>/', views.AtndTable.as_view(),
         name='atnd_table'),
 
-    # ----------------------------------------------------------------
     # 出席率グラフ (稽古ごとの出席率)
 
     # /rhsl/atnd_graph/1/ -> Attendance graph for Rehearsal #1
     path('atnd_graph/<int:rhsl_id>/', views.AtndGraph.as_view(),
         name='atnd_graph'),
+
+    # 稽古の可能性 (稽古可能性の表)
+
+    # /rhsl/rhsl_psblty/1/ -> Rehearsal possibility for Production #1
+    path('rhsl_psblty/<int:prod_id>/', views.RhslPossibility.as_view(),
+        name='rhsl_psblty'),
 
     # ----------------------------------------------------------------
     # 出欠変更履歴

@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.core.exceptions import PermissionDenied
 from rehearsal.models import Rehearsal, Actor, Attendance, Character, Scene, Appearance
-from .func import *
+from .view_func import *
 
 
 class AtndTable(LoginRequiredMixin, TemplateView):
