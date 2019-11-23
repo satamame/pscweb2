@@ -37,14 +37,14 @@ table td:nth-child(1) { position:sticky; left:0; z-index:1; }
     border:0; outline:1px solid #eee; }
 .header_cell{ line-height: 1.1; min-width:90px; max-width:90px; padding:2px 3px;
     border:0; outline:1px solid #eee; }
-.name_cell{ padding:2px 3px; vertical-align:middle; border:0; outline:1px solid #eee; }
+.scn_name_cell{ padding:2px 3px; vertical-align:middle; border:0; outline:1px solid #eee; }
 .data_cell{ text-align:center; vertical-align:middle; line-height:1.1; word-break:break-all;
     padding:2px 3px; border:1px solid #eee; }
 </style>
 {% endblock %}
 
 {% block javascript %}
-<script type="text/javascript" src="{% static 'js/rehearsal_possibility.js' %}"></script >
+<script type="text/javascript" src="{% static 'js/rehearsal_possibility.js' %}"></script>
 
 <script>
 var dowChars = '日月火水木金土';
@@ -53,16 +53,16 @@ var dowChars = '日月火水木金土';
 // 稽古のリスト
 rhsls = JSON.parse('{{ rhsls|safe }}');
 // シーンのリスト
+scns = JSON.parse('{{ scns|safe }}');
+// 登場人物ベースの稽古可能性データ
+psblty_in_chrs = JSON.parse('{{ psblty_in_chrs|safe }}');
 
-// 登場人物ベースのデータ
+// 役者ベースの稽古可能性データ
 
-// 役者ベースのデータ
-
-// セリフ数ベースのデータ
+// セリフ数ベースの稽古可能性データ
 
 
-// init_scene_menu();
-// init();
-// draw();
+init();
+draw();
 </script>
 {% endblock %}

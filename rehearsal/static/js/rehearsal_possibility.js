@@ -3,7 +3,7 @@
 // .data_cell
 
 // 以下のデータを View から受け取ること
-var rhsl;               // 稽古のリスト
+var rhsls;               // 稽古のリスト
 
 // 出席率を色に変換
 function color_for_rate(rate){
@@ -19,6 +19,14 @@ function init(){
     mode = document.getElementById("mode_menu").value;
 }
 
+// 出席率を色に変換
+function color_for_rate(rate){
+    var r = 240 - (rate * 8) ** 2 - rate * 64;
+    var g = 240;
+    var b = r;
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
 // テーブルを描画
 function draw(){
     // モードを取得
@@ -27,7 +35,7 @@ function draw(){
     // thead
     var thead = "<tr><th class=\"top_left_cell\"></th>";
     
-    rhsls.forEach((rhsl, rhsl_idx) => {
+    rhsls.forEach((rhsl) => {
         // 日付を整形
         var d = new Date(rhsl['date']);
         var dateStr = `
@@ -46,67 +54,44 @@ function draw(){
     
     document.getElementById("t_header").innerHTML = thead;
     
+    // モードによって使うデータを変える
+    var psblty;
+    switch (mode){
+        case "by_chrs":
+            psblty = psblty_in_chrs;
+            break;
+        default:
+            psblty = psblty_in_chrs;
+            break;
+    }
+    
+    // 最大値
+    var max = 0;
+    psblty.forEach((rhsl_psblty) => {
+        console.log('max per rhsl: ' + Math.max(...rhsl_psblty));
+        max = Math.max(max, Math.max(...rhsl_psblty));
+    });
+    
+    console.log('max: ' + max);
+    
     // tbody
-    // var tbody = "<tr>";
-    // scns.forEach((scn, scn_idx) => {
+    var tbody = "";
+    scns.forEach((scn, scn_idx) => {
+        // シーン名のカラム
+        tbody += `<tr><td class=\"scn_name_cell\">${scn['name']}</td>`;
         
-    //     var time_slots = "";
-    //     var offset = 0;
-    //     scns_time_slots[scn_idx].forEach((slot, slot_idx) => {
-    //         // 出席者が演じるキャラのリストと合計セリフ数
-    //         var atnd_chrs = [];
-    //         var atnd_lines_num = 0;
-    //         scn['chr_idxs'].forEach((chr_idx, chr_idx_idx) => {
-    //             if (slot['attendee'].indexOf(chrs[chr_idx]['actr_idx']) >= 0){
-    //                 atnd_chrs.push(chrs[chr_idx]);
-    //                 atnd_lines_num += scn['lines_nums'][chr_idx_idx];
-    //             }
-    //         });
-            
-    //         // スロットの高さ
-    //         var height = height_for_time(slot['from_time'], slot['to_time']);
-            
-    //         // 出席率
-    //         var atnd_num;
-    //         var total_num;
-    //         switch (mode){
-    //             // 登場人物の数を指標とする場合
-    //             case "by_chrs":
-    //                 atnd_num = atnd_chrs.length;
-    //                 total_num = scn['chr_idxs'].length;
-    //                 break;
-    //             // 役者の数を指標とする場合
-    //             case "by_actrs":
-    //                 atnd_num = slot['attendee'].length;
-    //                 total_num = scn_actr_idxs(scn_idx).length;
-    //                 break;
-    //             // セリフの数を指標とする場合
-    //             case "by_lines":
-    //                 atnd_num = atnd_lines_num;
-    //                 total_num = scn['lines_nums'].reduce((a,x) => a += x, 0);
-    //                 break;
-    //         }
-    //         var atnd_rate = 0;
-    //         if (total_num > 0)
-    //             atnd_rate = atnd_num / total_num;
-            
-    //         // スロットの色
-    //         var color = color_for_rate(atnd_rate);
-            
-    //         // 内容
-    //         time_slots += `<div style=\"position:absolute; top:${offset}px; left:0; width:100%; height:${height}px; `
-    //             + `background-color:${color}; border:solid 1px #eee;\">`;
-    //         time_slots += slot['from_time'] + "-" + slot['to_time'] + "<br>";
-    //         time_slots += `<a href=\"javascript:void(0)\" onclick=\"show_info(${scn_idx}, ${slot_idx})\">`;
-    //         time_slots += `${atnd_num}/${total_num}</a>`;
-    //         time_slots += "</div>\n";
-            
-    //         offset += height;
-    //     });
+        rhsls.forEach((rhsl, rhsl_idx) => {
+            // 可能性の値
+            var point = psblty[rhsl_idx][scn_idx];
+            // スロットの色
+            var color = color_for_rate(point / max);
+            // セルの内容
+            tbody += `<td style=\"background-color:${color}; border:solid 1px #eee;\">`;
+            tbody += `${Math.round(point)}</td>\n`;
+        });
         
-    //     tbody += `<td class=\"data_cell\" style=\"position:relative; height:${offset}px;\">`
-    //         + time_slots + "</td>";
-    // });
-    // tbody += "</tr>";
-    // document.getElementById("t_data").innerHTML = tbody;
+        tbody += "</tr>\n";
+    });
+    
+    document.getElementById("t_data").innerHTML = tbody;
 }

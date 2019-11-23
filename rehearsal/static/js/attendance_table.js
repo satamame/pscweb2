@@ -99,7 +99,7 @@ function draw(){
     // thead
     var thead = "<tr><th class=\"top_left_cell\"></th>";
     
-    rhsls.forEach((rhsl, rhsl_idx) => {
+    rhsls.forEach((rhsl) => {
         // 日付を整形
         var d = new Date(rhsl['date']);
         var dateStr = `
