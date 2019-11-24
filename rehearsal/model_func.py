@@ -27,12 +27,14 @@ def time_slots_for_rehearsal(rehearsal, actors=None, scenes=None):
         for chr in chrs:
             apprs.extend(list(chr.appearance_set.filter(scene=scene)))
         
+        average_lines_num = Appearance.average_lines_num(apprs)
+        
         return {
             'actor': actor,
             'appearances': [{
                 'character': appr.character,
-                'lines_num': Appearance.average_lines_num(apprs)
-                    if appr.lines_auto else appr.lines_num
+                'lines_num': average_lines_num if appr.lines_auto
+                                else appr.lines_num
             } for appr in apprs]
         }
     

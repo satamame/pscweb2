@@ -3,7 +3,11 @@
 // .data_cell
 
 // 以下のデータを View から受け取ること
-var rhsls;               // 稽古のリスト
+var rhsls;              // 稽古のリスト
+var scns;               // シーンのリスト
+var psblty_in_chrs;     // 登場人物ベースの稽古可能性データ
+var psblty_in_actrs;    // 役者ベースの稽古可能性データ
+var psblty_in_lines;    // セリフ数ベースの稽古可能性データ
 
 // 出席率を色に変換
 function color_for_rate(rate){
@@ -62,6 +66,9 @@ function draw(){
             break;
         case "by_actrs":
             psblty = psblty_in_actrs;
+            break;
+        case "by_lines":
+            psblty = psblty_in_lines;
             break;
         default:
             psblty = psblty_in_chrs;
