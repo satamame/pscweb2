@@ -83,6 +83,10 @@ class RhslPossibility(LoginRequiredMixin, TemplateView):
                 # シーンの登場人物数 (= 出番データの数)
                 chrs_num = Appearance.objects.filter(scene=slots['scene']).count()
                 
+                # シーンの長さ
+                # TODO: length_auto に対応すること
+                scn_len = slots['scene'].length
+                
                 psblty = 0
                 # スロットごとの「可能性の指標」を加算していく
                 for slot in slots['time_slots']:
@@ -96,8 +100,8 @@ class RhslPossibility(LoginRequiredMixin, TemplateView):
                     for chrs_list in atnd_chrs_lists:
                         atnd_chrs_num += len(chrs_list)
                     
-                    # 可能性の指標 = 時間 * 出席する役者の役の数 / シーンの登場人物数
-                    psblty += slot_time * atnd_chrs_num / chrs_num
+                    # 可能性の指標 = 時間 * 出席する役者の役の数 / シーンの登場人物数 / シーンの長さ
+                    psblty += slot_time * atnd_chrs_num / chrs_num / scn_len
                     
                     # print('possibility: {} x {} / {} = {}'.format(
                     #     slot_time, atnd_chrs_num, chrs_num,
@@ -122,6 +126,10 @@ class RhslPossibility(LoginRequiredMixin, TemplateView):
                 scn_actrs = [appr.character.cast for appr in scn_apprs]
                 actrs_num = len(list(set(scn_actrs)))
                 
+                # シーンの長さ
+                # TODO: length_auto に対応すること
+                scn_len = slots['scene'].length
+                
                 psblty = 0
                 # スロットごとの「可能性の指標」を加算していく
                 for slot in slots['time_slots']:
@@ -130,8 +138,8 @@ class RhslPossibility(LoginRequiredMixin, TemplateView):
                     to_time = slot['to_time'].hour * 60 + slot['to_time'].minute
                     slot_time = to_time - from_time
                     
-                    # 可能性の指標 = 時間 * 出席する役者の役の数 / シーンに出ている役者の数
-                    psblty += slot_time * len(slot['attendee']) / actrs_num
+                    # 可能性の指標 = 時間 * 出席する役者の役の数 / シーンに出ている役者の数 / シーンの長さ
+                    psblty += slot_time * len(slot['attendee']) / actrs_num / scn_len
                     
                     # print('possibility: {} x {} / {} = {}'.format(
                     #     slot_time, len(slot['attendee']), actrs_num,
@@ -159,6 +167,10 @@ class RhslPossibility(LoginRequiredMixin, TemplateView):
                     for appr in scn_apprs]
                 lines_num = sum(scn_lines)
                 
+                # シーンの長さ
+                # TODO: length_auto に対応すること
+                scn_len = slots['scene'].length
+                
                 psblty = 0
                 # スロットごとの「可能性の指標」を加算していく
                 for slot in slots['time_slots']:
@@ -175,8 +187,8 @@ class RhslPossibility(LoginRequiredMixin, TemplateView):
                             chr_lines_num += chr['lines_num']
                         atnd_lines_num += chr_lines_num
                     
-                    # 可能性の指標 = 時間 * 出席する役者のセリフ数 / シーンのセリフ数
-                    psblty += slot_time * atnd_lines_num / lines_num
+                    # 可能性の指標 = 時間 * 出席する役者のセリフ数 / シーンのセリフ数 / シーンの長さ
+                    psblty += slot_time * atnd_lines_num / lines_num / scn_len
                     
                     # print('possibility: {} x {} / {} = {}'.format(
                     #     slot_time, atnd_lines_num, lines_num,

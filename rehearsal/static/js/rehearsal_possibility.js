@@ -88,7 +88,8 @@ function draw(){
     var tbody = "";
     scns.forEach((scn, scn_idx) => {
         // シーン名のカラム
-        tbody += `<tr><td class=\"scn_name_cell\">${scn['name']}</td>`;
+        tbody += "<tr><td class=\"scn_name_cell\">";
+        tbody += `<a href=\"/rhsl/scn_detail/${scn['id']}/\">${scn['name']}</a></td>`;
         
         rhsls.forEach((rhsl, rhsl_idx) => {
             // 可能性の値
@@ -97,7 +98,7 @@ function draw(){
             var color = color_for_rate(point / max);
             // セルの内容
             tbody += `<td style=\"background-color:${color}; border:solid 1px #eee;\">`;
-            tbody += `${Math.round(point)}</td>\n`;
+            tbody += `${point.toFixed(2)}</td>\n`;
         });
         
         tbody += "</tr>\n";
