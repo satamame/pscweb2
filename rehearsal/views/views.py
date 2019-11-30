@@ -10,7 +10,7 @@ from django.core.exceptions import PermissionDenied
 from production.models import Production
 from rehearsal.models import Rehearsal, Scene, Place, Facility, Character, Actor,\
     Appearance, ScnComment, Attendance, AtndChangeLog
-from rehearsal.forms import RhslForm, ScnApprForm, ChrApprForm, AtndForm
+from rehearsal.forms import RhslForm, ChrForm, ScnApprForm, ChrApprForm, AtndForm
 from .view_func import *
 
 
@@ -100,6 +100,18 @@ class ProdBaseUpdateView(LoginRequiredMixin, UpdateView):
         test_edit_permission(self, self.production.id)
         
         return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        '''保存時のリクエストを受けるハンドラ
+        '''
+        # production を view の属性として持っておく
+        # フォームに渡してバリデーションで使うため
+        self.production = self.get_object().production
+
+        # 編集権を検査してアクセス中の公演ユーザを取得する
+        prod_user = test_edit_permission(self, self.production.id)
+        
+        return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
         '''バリデーションを通った時
@@ -652,23 +664,17 @@ class ChrCreate(ProdBaseCreateView):
     '''Character の追加ビュー
     '''
     model = Character
-    fields = ('name', 'short_name', 'sortkey', 'cast')
+    form_class = ChrForm
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
+    def get_form_kwargs(self):
+        '''フォームに渡す情報を改変する
         '''
-        # super で production はセットされる
-        context = super().get_context_data(**kwargs)
+        kwargs = super().get_form_kwargs()
         
-        # その公演の役者のみ表示するようにする
-        actors = Actor.objects.filter(production=self.production)
-        # 選択肢を作成
-        choices = [('', '---------')]
-        choices.extend([(a.id, str(a)) for a in actors])
-        # Form にセット (選択肢以外の値はエラーにしてくれる)
-        context['form'].fields['cast'].choices = choices
+        # フォーム側でバリデーションに使うので production を渡す
+        kwargs['production'] = self.production
         
-        return context
+        return kwargs
     
     def get_success_url(self):
         '''追加に成功した時の遷移先を動的に与える
@@ -682,22 +688,17 @@ class ChrUpdate(ProdBaseUpdateView):
     '''Character の更新ビュー
     '''
     model = Character
-    fields = ('name', 'short_name', 'sortkey', 'cast')
+    form_class = ChrForm
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
+    def get_form_kwargs(self):
+        '''フォームに渡す情報を改変する
         '''
-        context = super().get_context_data(**kwargs)
+        kwargs = super().get_form_kwargs()
         
-        # その公演の役者のみ表示するようにする
-        actors = Actor.objects.filter(production=self.production)
-        # 選択肢を作成
-        choices = [('', '---------')]
-        choices.extend([(a.id, str(a)) for a in actors])
-        # Form にセット (選択肢以外の値はエラーにしてくれる)
-        context['form'].fields['cast'].choices = choices
+        # フォーム側でバリデーションに使うので production を渡す
+        kwargs['production'] = self.production
         
-        return context
+        return kwargs
     
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える

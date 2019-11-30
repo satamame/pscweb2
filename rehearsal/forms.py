@@ -28,6 +28,24 @@ class RhslForm(forms.ModelForm):
         return end_time
 
 
+class ChrForm(forms.ModelForm):
+    '''登場人物の追加・更新フォーム
+    '''
+    class Meta:
+        model = Character
+        fields = ('name', 'short_name', 'sortkey', 'cast')
+    
+    def __init__(self, *args, **kwargs):
+        # view で追加したパラメタを抜き取る
+        production = kwargs.pop('production')
+        
+        super().__init__(*args, **kwargs)
+        
+        # 配役は、同じ公演の役者のみ選択可能
+        queryset = Actor.objects.filter(production=production)
+        self.fields['cast'].queryset = queryset
+
+
 class ScnApprForm(forms.ModelForm):
     '''シーンへの出番の追加フォーム
     '''
