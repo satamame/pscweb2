@@ -1,8 +1,8 @@
 from django import forms
 from django.contrib.admin.widgets import AdminDateWidget, AdminTimeWidget
-from production.models import Production
+from production.models import Production, ProdUser
 from .models import Rehearsal, Scene, Character, Actor, Appearance, ScnComment,\
-    Attendance
+    Attendance, Facility, Place
 
 
 class RhslForm(forms.ModelForm):
@@ -14,6 +14,18 @@ class RhslForm(forms.ModelForm):
         widgets = {
             'date': AdminDateWidget(),
         }
+    
+    def __init__(self, *args, **kwargs):
+        # view で追加したパラメタを抜き取る
+        production = kwargs.pop('production')
+        
+        super().__init__(*args, **kwargs)
+        
+        # 稽古場は、同じ公演の稽古場のみ選択可能
+        facilities = Facility.objects.filter(production=production)
+        # その施設を含む稽古場
+        places = Place.objects.filter(facility__in=facilities)
+        self.fields['place'].queryset = places
     
     def clean_end_time(self):
         '''end_time が start_time より遅いことのバリデーション
@@ -42,8 +54,26 @@ class ChrForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         
         # 配役は、同じ公演の役者のみ選択可能
-        queryset = Actor.objects.filter(production=production)
-        self.fields['cast'].queryset = queryset
+        actors = Actor.objects.filter(production=production)
+        self.fields['cast'].queryset = actors
+
+
+class ActrForm(forms.ModelForm):
+    '''役者の追加・更新フォーム
+    '''
+    class Meta:
+        model = Actor
+        fields = ('name', 'short_name', 'prod_user')
+    
+    def __init__(self, *args, **kwargs):
+        # view で追加したパラメタを抜き取る
+        production = kwargs.pop('production')
+        
+        super().__init__(*args, **kwargs)
+        
+        # アカウントは、同じ公演の公演ユーザのみ選択可能
+        prod_users = ProdUser.objects.filter(production=production)
+        self.fields['prod_user'].queryset = prod_users
 
 
 class ScnApprForm(forms.ModelForm):
@@ -56,7 +86,13 @@ class ScnApprForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         # view で追加したパラメタを抜き取る
         self.scene = kwargs.pop('scene')
+        production = kwargs.pop('production')
+        
         super().__init__(*args, **kwargs)
+        
+        # 登場人物は、同じ公演の登場人物のみ選択可能
+        characters = Character.objects.filter(production=production)
+        self.fields['character'].queryset = characters
     
     def clean_character(self):
         '''同じ登場人物を追加していないことのバリデーション
@@ -79,7 +115,14 @@ class ChrApprForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         # view で追加したパラメタを抜き取る
         self.character = kwargs.pop('character')
+        production = kwargs.pop('production')
+        
         super().__init__(*args, **kwargs)
+        
+        # シーンは、同じ公演のシーンのみ選択可能
+        scenes = Scene.objects.filter(production=production)
+        self.fields['scene'].queryset = scenes
+
     
     def clean_scene(self):
         '''同じシーンを追加していないことのバリデーション

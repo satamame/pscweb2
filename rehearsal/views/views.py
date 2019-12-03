@@ -8,9 +8,10 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from production.models import Production
-from rehearsal.models import Rehearsal, Scene, Place, Facility, Character, Actor,\
-    Appearance, ScnComment, Attendance, AtndChangeLog
-from rehearsal.forms import RhslForm, ChrForm, ScnApprForm, ChrApprForm, AtndForm
+from rehearsal.models import Rehearsal, Scene, Place, Facility, Character,\
+    Actor, Appearance, ScnComment, Attendance, AtndChangeLog
+from rehearsal.forms import RhslForm, ChrForm, ActrForm, ScnApprForm,\
+    ChrApprForm, AtndForm
 from .view_func import *
 
 
@@ -206,24 +207,15 @@ class RhslCreate(ProdBaseCreateView):
     model = Rehearsal
     form_class = RhslForm
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
+    def get_form_kwargs(self):
+        '''フォームに渡す情報を改変する
         '''
-        # super で production はセットされる
-        context = super().get_context_data(**kwargs)
+        kwargs = super().get_form_kwargs()
         
-        # その公演の稽古場のみ表示するようにする
-        # その公演の稽古施設
-        facilities = Facility.objects.filter(production=self.production)
-        # その施設を含む稽古場
-        places = Place.objects.filter(facility__in=facilities)
-        # 選択肢を作成
-        choices = [('', '---------')]
-        choices.extend([(p.id, str(p)) for p in places])
-        # Form にセット (選択肢以外の値はエラーにしてくれる)
-        context['form'].fields['place'].choices = choices
+        # フォーム側でバリデーションに使うので production を渡す
+        kwargs['production'] = self.production
         
-        return context
+        return kwargs
     
     def get_success_url(self):
         '''追加に成功した時の遷移先を動的に与える
@@ -239,23 +231,15 @@ class RhslUpdate(ProdBaseUpdateView):
     model = Rehearsal
     form_class = RhslForm
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
+    def get_form_kwargs(self):
+        '''フォームに渡す情報を改変する
         '''
-        context = super().get_context_data(**kwargs)
+        kwargs = super().get_form_kwargs()
         
-        # その公演の稽古場のみ表示するようにする
-        # その公演の稽古施設
-        facilities = Facility.objects.filter(production=self.production)
-        # その施設を含む稽古場
-        places = Place.objects.filter(facility__in=facilities)
-        # 選択肢を作成
-        choices = [('', '---------')]
-        choices.extend([(p.id, str(p)) for p in places])
-        # Form にセット (選択肢以外の値はエラーにしてくれる)
-        context['form'].fields['place'].choices = choices
+        # フォーム側でバリデーションに使うので production を渡す
+        kwargs['production'] = self.production
         
-        return context
+        return kwargs
     
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
@@ -758,24 +742,18 @@ class ActrCreate(ProdBaseCreateView):
     '''Actor の追加ビュー
     '''
     model = Actor
-    fields = ('name', 'short_name', 'prod_user')
+    form_class = ActrForm
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
+    def get_form_kwargs(self):
+        '''フォームに渡す情報を改変する
         '''
-        # super で production はセットされる
-        context = super().get_context_data(**kwargs)
+        kwargs = super().get_form_kwargs()
         
-        # その公演のユーザのみ表示するようにする
-        prod_users = ProdUser.objects.filter(production=self.production)
-        # 選択肢を作成
-        choices = [('', '---------')]
-        choices.extend([(pu.id, str(pu)) for pu in prod_users])
-        # Form にセット (選択肢以外の値はエラーにしてくれる)
-        context['form'].fields['prod_user'].choices = choices
+        # フォーム側でバリデーションに使うので production を渡す
+        kwargs['production'] = self.production
         
-        return context
-
+        return kwargs
+    
     def get_success_url(self):
         '''追加に成功した時の遷移先を動的に与える
         '''
@@ -788,23 +766,17 @@ class ActrUpdate(ProdBaseUpdateView):
     '''Actor の更新ビュー
     '''
     model = Actor
-    fields = ('name', 'short_name', 'prod_user')
+    form_class = ActrForm
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
+    def get_form_kwargs(self):
+        '''フォームに渡す情報を改変する
         '''
-        # super で production はセットされる
-        context = super().get_context_data(**kwargs)
+        kwargs = super().get_form_kwargs()
         
-        # その公演のユーザのみ表示するようにする
-        prod_users = ProdUser.objects.filter(production=self.production)
-        # 選択肢を作成
-        choices = [('', '---------')]
-        choices.extend([(pu.id, str(pu)) for pu in prod_users])
-        # Form にセット (選択肢以外の値はエラーにしてくれる)
-        context['form'].fields['prod_user'].choices = choices
+        # フォーム側でバリデーションに使うので production を渡す
+        kwargs['production'] = self.production
         
-        return context
+        return kwargs
     
     def get_success_url(self):
         '''更新に成功した時の遷移先を動的に与える
@@ -879,29 +851,14 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         
         return super().get(request, *args, **kwargs)
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
-        '''
-        context = super().get_context_data(**kwargs)
-        
-        # その公演の登場人物のみ表示するようにする
-        characters = Character.objects.filter(
-            production=self.scene.production).order_by('sortkey')
-        # 選択肢を作成
-        choices = [('', '---------')]
-        choices.extend([(c.id, str(c)) for c in characters])
-        # Form にセット (選択肢以外の値はエラーにしてくれる)
-        context['form'].fields['character'].choices = choices
-        
-        return context
-    
     def get_form_kwargs(self):
         '''フォームに渡す情報を改変する
         '''
         kwargs = super().get_form_kwargs()
         
-        # フォーム側でバリデーションに使うので scene を渡す
+        # フォーム側でバリデーションに使うので scene, production を渡す
         kwargs['scene'] = self.scene
+        kwargs['production'] = self.production
         
         return kwargs
     
@@ -911,6 +868,8 @@ class ScnApprCreate(LoginRequiredMixin, CreateView):
         # scene を view の属性として持っておく
         # 保存時にインスタンスにセットするため
         self.scene = self.get_scene_from_request()
+        # production はフォームに渡すために持っておく
+        self.production = self.scene.production
         
         # 編集権を検査する
         test_edit_permission(self, self.scene.production.id)
@@ -972,29 +931,14 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
         
         return super().get(request, *args, **kwargs)
     
-    def get_context_data(self, **kwargs):
-        '''テンプレートに渡すパラメタを改変する
-        '''
-        context = super().get_context_data(**kwargs)
-        
-        # その公演のシーンのみ表示するようにする
-        scenes = Scene.objects.filter(
-            production=self.character.production).order_by('sortkey')
-        # 選択肢を作成
-        choices = [('', '---------')]
-        choices.extend([(s.id, str(s)) for s in scenes])
-        # Form にセット (選択肢以外の値はエラーにしてくれる)
-        context['form'].fields['scene'].choices = choices
-        
-        return context
-    
     def get_form_kwargs(self):
         '''フォームに渡す情報を改変する
         '''
         kwargs = super().get_form_kwargs()
         
-        # フォーム側でバリデーションに使うので character を渡す
+        # フォーム側でバリデーションに使うので character, production を渡す
         kwargs['character'] = self.character
+        kwargs['production'] = self.production
         
         return kwargs
     
@@ -1004,6 +948,8 @@ class ChrApprCreate(LoginRequiredMixin, CreateView):
         # character を view の属性として持っておく
         # 保存時にインスタンスにセットするため
         self.character = self.get_character_from_request()
+        # production はフォームに渡すために持っておく
+        self.production = self.character.production
         
         # 編集権を検査する
         test_edit_permission(self, self.character.production.id)
