@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 django = ">=3.0.7"
-mysqlclient = {path = "./mysqlclient-1.4.6-cp38-cp38-win_amd64.whl"}
+mysqlclient = "*"
 gunicorn = "*"
 django-heroku = "*"
 social-auth-app-django = "*"
